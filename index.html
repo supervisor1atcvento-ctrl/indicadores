@@ -2,10 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard de Asesores - Indicadores y Solicitudes</title>
+  <title>Dashboard de Asesores - Indicadores y Solicitudes (Corregido)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    /* Tema Oscuro Profesional */
     :root{
       --bg:#000;
       --card:#0f0f0f;
@@ -26,7 +25,6 @@
     .grid{display:grid;grid-template-columns:1fr;gap:16px}
     @media(min-width:900px){ .grid{grid-template-columns: 1fr 360px;} }
 
-    /* Tabla leaderboard */
     .card{background:var(--card);padding:12px;border-radius:10px;border:1px solid #1a1a1a}
     table{width:100%;border-collapse:collapse;font-size:14px}
     thead th{background:#0b0b0b;color:var(--muted);padding:10px;border-bottom:1px solid var(--table-border);text-align:left}
@@ -36,7 +34,6 @@
     .small{font-size:12px;color:var(--muted)}
     .action-btn{background:var(--accent);color:#000;border:none;padding:6px 8px;border-radius:6px;cursor:pointer}
 
-    /* Form */
     .form{background:#0b0b0b;padding:12px;border-radius:8px;border:1px solid #1a1a1a}
     .form label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
     .form input[type="text"], .form select, .form textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:var(--white);margin-top:6px}
@@ -75,7 +72,6 @@
     </section>
 
     <div class="grid">
-      <!-- Leaderboard -->
       <div class="card">
         <h2 style="margin:0 0 10px 0;color:var(--muted)">Leaderboard</h2>
         <div style="overflow:auto">
@@ -99,7 +95,6 @@
         </div>
       </div>
 
-      <!-- Formulario de Solicitud -->
       <aside class="form">
         <h3 style="margin:0 0 8px 0;color:var(--muted)">Solicitud de Beneficio</h3>
         <form id="benefitForm">
@@ -131,8 +126,7 @@
 
   <script>
     /******************************************************************
-     * Configuración de la hoja de cálculo
-     * ID del spreadsheet y nombres de pestañas a leer
+     * Configuración
      ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
     const SHEETS = {
@@ -141,20 +135,24 @@
       calls: 'Llamadas_BD'
     };
 
-    /******************************************************************
-     * Mapas de columnas (0-based index según la respuesta gviz/tq)
-     * - Tickets_BD: asesor en columna E -> índice 4 ; fecha en H -> índice 7
-     * - Chats_BD: asesor en columna B -> índice 1 ; fecha en i -> índice 8
-     * - Llamadas_BD: asesor en columna B -> índice 1 ; fecha en c -> índice 2
-     ******************************************************************/
+    // Mapas por letra -> índice 0-based
+    function letterToIndex(letter){
+      if(!letter) return -1;
+      return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+    }
+
+    // Columnas según tu corrección:
+    // Tickets: asesor en E -> index 4 ; fecha en H -> index 7
+    // Chats: asesor en B -> index 1 ; fecha en I -> index 8
+    // Llamadas: asesor en B -> index 1 ; fecha en C -> index 2
     const COL = {
-      tickets: { advisor: 4, date: 7 },
-      chats:  { advisor: 1, date: 8 },
-      calls:  { advisor: 1, date: 2 }
+      tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') },
+      chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
+      calls:  { advisor: letterToIndex('B'), date: letterToIndex('C') }
     };
 
     /******************************************************************
-     * Util: formatea hora en HH:mm (24h)
+     * Utilidades
      ******************************************************************/
     function formatHHmm(date){
       const d = new Date(date);
@@ -163,132 +161,183 @@
       return `${hh}:${mm}`;
     }
 
-    /******************************************************************
-     * Lectura de Google Sheets usando la API pública gviz/tq
-     * Devuelve un array de filas, cada fila es array de c.v (o "" si null)
-     ******************************************************************/
-    async function fetchSheetRows(sheetName){
-      const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('Error al leer Google Sheets: ' + res.status);
-      const text = await res.text();
-      // gviz devuelve "/*O_o*/\ngoogle.visualization.Query.setResponse(...);"
-      const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}')+1));
-      const table = json.table;
-      const rows = table.rows || [];
-      // Mapear a valores simples (c.v) y mantener null como ""
-      return rows.map(r => (r.c || []).map(c => c ? c.v : ""));
+    function normalizeName(s){
+      if(s === null || s === undefined) return '';
+      return String(s).trim();
+    }
+
+    // Simple CSV parser that respects quoted fields
+    function parseCSV(text){
+      const rows = [];
+      let cur = '';
+      let row = [];
+      let inQuotes = false;
+      for(let i=0;i<text.length;i++){
+        const ch = text[i];
+        const next = text[i+1];
+        if(ch === '"' ){
+          if(inQuotes && next === '"'){ // escaped quote
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+        if(ch === ',' && !inQuotes){
+          row.push(cur);
+          cur = '';
+          continue;
+        }
+        if((ch === '\n' || ch === '\r') && !inQuotes){
+          // handle CRLF
+          if(ch === '\r' && next === '\n'){ i++; }
+          row.push(cur);
+          rows.push(row);
+          row = [];
+          cur = '';
+          continue;
+        }
+        cur += ch;
+      }
+      // push last
+      if(cur !== '' || row.length){
+        row.push(cur);
+        rows.push(row);
+      }
+      return rows;
     }
 
     /******************************************************************
-     * Parseo de fecha desde celdas de Google Sheets
-     * gviz puede devolver fechas como objeto Date serializado o como string.
-     * Intentamos crear un Date válido; si falla, devolvemos null.
+     * Fetch CSV from Google Sheets (out:csv) — devuelve array de filas
+     * Se salta la primera fila (encabezado) en el procesamiento posterior.
      ******************************************************************/
-    function parseSheetDate(value){
-      if(!value && value !== 0) return null;
-      // Si ya es un objeto Date serializado por gviz, puede venir como string ISO
-      // o como número (timestamp). Intentamos crear Date.
-      const d = new Date(value);
-      if(!isNaN(d.getTime())) return d;
-      // Intentar parseo manual (por si viene "dd/mm/yyyy" o similar)
-      const parts = String(value).match(/(\d{4})-(\d{2})-(\d{2})/);
-      if(parts){
-        return new Date(`${parts[1]}-${parts[2]}-${parts[3]}T00:00:00`);
+    async function fetchSheetCSVRows(sheetName){
+      const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')');
+      const text = await res.text();
+      const rows = parseCSV(text);
+      return rows; // incluye encabezado en rows[0]
+    }
+
+    /******************************************************************
+     * Parseo de fecha flexible
+     ******************************************************************/
+    function parseSheetDateFlexible(value){
+      if(value === null || value === undefined || value === '') return null;
+      // Si viene como número (Excel serial) no lo manejamos aquí; gviz CSV suele enviar ISO o dd/mm/yyyy
+      // Intentos de parseo:
+      // 1) ISO
+      const iso = new Date(value);
+      if(!isNaN(iso.getTime())) return iso;
+      // 2) dd/mm/yyyy o dd-mm-yyyy
+      const m = String(value).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if(m){
+        const day = Number(m[1]), month = Number(m[2]) - 1, year = Number(m[3]);
+        return new Date(year < 100 ? 2000 + year : year, month, day);
+      }
+      // 3) yyyy/mm/dd
+      const m2 = String(value).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if(m2){
+        return new Date(Number(m2[1]), Number(m2[2]) - 1, Number(m2[3]));
       }
       return null;
     }
 
     /******************************************************************
-     * Contar registros por asesor por canal aplicando filtros de fecha
+     * Agregación de conteos por asesor
      *
-     * Reglas aplicadas (interpretación y comportamiento):
-     * - Chats y Llamadas: se cuentan si su fecha (columna indicada) está dentro del rango [from, to] (si se aplica filtro).
-     * - Tickets: se cuentan **solo** si la celda de fecha (col H) está VACÍA (según tu indicación "los campos que tengan fecha no se contemplen en el conteo de tickets").
-     *   Además, cuando la fecha de ticket exista y se use para filtros, se le suma +1 día (según tu nota).
-     * - Si no se especifica rango de fechas, se cuentan todos los registros (respetando la regla de tickets vacíos).
-     *
-     * NOTA: Si prefieres otra interpretación (por ejemplo contar tickets por fecha cuando H esté presente),
-     * puedo ajustar la lógica.
+     * Reglas aplicadas:
+     * - Tickets: se cuentan si la celda de fecha (H) está VACÍA.
+     *   (Si la celda H tiene fecha, no se cuenta ese ticket).
+     * - Chats y Calls: se cuentan si su fecha está dentro del rango (si se aplica).
+     * - Si no hay filtro de fechas, chats y llamadas se cuentan todos.
+     * - Para tickets: si deseas contar tickets con fecha aplicando +1 día para filtrar,
+     *   puedo activar esa lógica; por ahora se respeta la regla "no contar si hay fecha".
      ******************************************************************/
-    function aggregateCounts(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
-      const counts = {}; // { asesor: { tickets: n, chats: n, calls: n } }
+    function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
+      const counts = {};
+      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
 
-      function ensure(name){
-        if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 };
-      }
-
-      // Helper: check date in range (inclusive)
-      function inRange(date, from, to){
-        if(!date) return false;
-        const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()); // comparar por fecha (sin hora)
-        if(from && d < from) return false;
-        if(to && d > to) return false;
+      function inRangeDate(d, from, to){
+        if(!d) return false;
+        const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        if(from && dd < from) return false;
+        if(to && dd > to) return false;
         return true;
       }
 
-      // 1) Tickets: contar solo filas donde la columna fecha (H) esté vacía.
-      //    (Interpretación: si tienen fecha, no se contemplan en el conteo de tickets)
-      ticketsRows.forEach(row => {
-        const advisor = String(row[COL.tickets.advisor] || '').trim();
-        if(!advisor) return;
-        const dateCell = row[COL.tickets.date];
+      // Helper to safely get cell by index (rows may be shorter)
+      function cellValue(row, idx){
+        if(!row) return '';
+        if(idx < 0) return '';
+        return (idx < row.length) ? row[idx] : '';
+      }
+
+      // Tickets: skip header row (assume first row is header)
+      for(let r = 1; r < ticketsRows.length; r++){
+        const row = ticketsRows[r];
+        const advisorRaw = cellValue(row, COL.tickets.advisor);
+        const advisor = normalizeName(advisorRaw);
+        if(!advisor) continue;
+        const dateCell = cellValue(row, COL.tickets.date);
         // Si la celda de fecha tiene valor -> NO contar este ticket (según instrucción)
-        if(dateCell !== null && dateCell !== '' && dateCell !== undefined) {
-          // No se cuenta
-          return;
+        if(dateCell !== null && dateCell !== undefined && String(dateCell).trim() !== ''){
+          // no contar
+          continue;
         }
         ensure(advisor);
         counts[advisor].tickets += 1;
-      });
+      }
 
-      // 2) Chats: contar filas cuyo advisor (col B index 1) exista y cuya fecha (col i index 8) esté dentro del rango (si se aplica)
-      chatsRows.forEach(row => {
-        const advisor = String(row[COL.chats.advisor] || '').trim();
-        if(!advisor) return;
-        const rawDate = row[COL.chats.date];
-        const parsed = parseSheetDate(rawDate);
-        // Si hay filtro de fechas, respetarlo; si no hay filtro, contar todo
+      // Chats
+      for(let r = 1; r < chatsRows.length; r++){
+        const row = chatsRows[r];
+        const advisorRaw = cellValue(row, COL.chats.advisor);
+        const advisor = normalizeName(advisorRaw);
+        if(!advisor) continue;
+        const dateCell = cellValue(row, COL.chats.date);
+        const parsed = parseSheetDateFlexible(dateCell);
         if(filterFrom || filterTo){
-          if(!parsed) return; // si no hay fecha en chat, no lo contamos cuando hay filtro
-          if(!inRange(parsed, filterFrom, filterTo)) return;
+          if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
+          if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
         ensure(advisor);
         counts[advisor].chats += 1;
-      });
+      }
 
-      // 3) Calls: similar a chats, fecha en columna c (index 2)
-      callsRows.forEach(row => {
-        const advisor = String(row[COL.calls.advisor] || '').trim();
-        if(!advisor) return;
-        const rawDate = row[COL.calls.date];
-        const parsed = parseSheetDate(rawDate);
+      // Calls
+      for(let r = 1; r < callsRows.length; r++){
+        const row = callsRows[r];
+        const advisorRaw = cellValue(row, COL.calls.advisor);
+        const advisor = normalizeName(advisorRaw);
+        if(!advisor) continue;
+        const dateCell = cellValue(row, COL.calls.date);
+        const parsed = parseSheetDateFlexible(dateCell);
         if(filterFrom || filterTo){
-          if(!parsed) return;
-          if(!inRange(parsed, filterFrom, filterTo)) return;
+          if(!parsed) continue;
+          if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
         ensure(advisor);
         counts[advisor].calls += 1;
-      });
+      }
 
       return counts;
     }
 
     /******************************************************************
-     * Cálculo de puntajes proporcionales
-     * - Para cada canal se identifica el máximo (volumen más alto).
-     * - Ese asesor recibe 100 pts en ese canal.
-     * - Los demás reciben (volumen / max) * 100.
-     * - Puntaje total = promedio de los 3 canales (Tickets, Llamadas, Chats).
+     * Cálculo de puntajes proporcionales (comentarios en el código)
      *
-     * Devuelve un array ordenado por puntaje total descendente.
+     * - Se identifica el máximo por canal (tickets, calls, chats).
+     * - El asesor con el máximo recibe 100 pts en ese canal.
+     * - Los demás reciben (volumen / max) * 100.
+     * - Puntaje total = promedio de los 3 canales.
      ******************************************************************/
     function calculateScoresFromCounts(countsObj){
       const advisors = Object.keys(countsObj);
-      // Si no hay asesores, devolver vacío
       if(advisors.length === 0) return [];
 
-      // Obtener máximos por canal
       let maxTickets = 0, maxCalls = 0, maxChats = 0;
       advisors.forEach(name => {
         const c = countsObj[name];
@@ -297,9 +346,9 @@
         if(c.chats > maxChats) maxChats = c.chats;
       });
 
-      // Construir array con puntos
       const arr = advisors.map(name => {
         const c = countsObj[name];
+        // Si el máximo es 0 en un canal, todos reciben 0 en ese canal
         const ticketPts = maxTickets ? (c.tickets / maxTickets) * 100 : 0;
         const callPts   = maxCalls   ? (c.calls   / maxCalls)   * 100 : 0;
         const chatPts   = maxChats   ? (c.chats   / maxChats)   * 100 : 0;
@@ -316,13 +365,12 @@
         };
       });
 
-      // Ordenar por total descendente
       arr.sort((a,b) => b.total - a.total);
       return arr;
     }
 
     /******************************************************************
-     * Renderizado del leaderboard en la tabla
+     * Renderizado y UI
      ******************************************************************/
     function renderLeaderboard(scores, highlightTop = true, advisorFilter = ''){
       const tbody = document.querySelector('#leaderboardTable tbody');
@@ -333,7 +381,7 @@
         if(idx === 0 && highlightTop) tr.classList.add('highlight');
         tr.innerHTML = `
           <td>${idx+1}</td>
-          <td>${row.name}</td>
+          <td>${escapeHtml(row.name)}</td>
           <td>${row.tickets} / ${row.ticketPts}</td>
           <td>${row.calls} / ${row.callPts}</td>
           <td>${row.chats} / ${row.chatPts}</td>
@@ -343,7 +391,6 @@
         tbody.appendChild(tr);
       });
 
-      // Añadir listeners a botones de solicitud
       tbody.querySelectorAll('button.action-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const name = e.currentTarget.getAttribute('data-advisor');
@@ -352,12 +399,8 @@
       });
     }
 
-    /******************************************************************
-     * Poblado del select de asesores
-     ******************************************************************/
     function populateAdvisorFilter(scores){
       const sel = document.getElementById('filterAdvisor');
-      // limpiar manteniendo la primera opción
       sel.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
       scores.forEach(s => {
         const opt = document.createElement('option');
@@ -367,19 +410,11 @@
       });
     }
 
-    /******************************************************************
-     * Abrir formulario de solicitud con asesor seleccionado
-     ******************************************************************/
     function openRequestForm(advisorName){
       document.getElementById('formAdvisor').value = advisorName;
-      // desplazar a la vista del formulario (UX)
       document.getElementById('formAdvisor').scrollIntoView({behavior:'smooth', block:'center'});
     }
 
-    /******************************************************************
-     * Envío del formulario (demo: muestra alerta y limpia campos)
-     * Aquí puedes integrar envío a backend, Google Forms, Sheets, etc.
-     ******************************************************************/
     document.getElementById('benefitForm').addEventListener('submit', function(e){
       e.preventDefault();
       const advisor = document.getElementById('formAdvisor').value;
@@ -387,42 +422,34 @@
       const date = document.getElementById('formDate').value;
       const comment = document.getElementById('formComment').value;
       if(!advisor){ alert('Selecciona un asesor desde el leaderboard.'); return; }
-      // Demo: mostrar confirmación
       alert(`Solicitud enviada:\nAsesor: ${advisor}\nBeneficio: ${benefit}\nFecha: ${date}\nComentario: ${comment || '-'}`);
-      // limpiar
       document.getElementById('formBenefit').value = '';
       document.getElementById('formDate').value = '';
       document.getElementById('formComment').value = '';
     });
 
-    /******************************************************************
-     * Escape HTML simple para atributos
-     ******************************************************************/
     function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     /******************************************************************
-     * Función principal: obtiene datos, agrega, calcula y renderiza
+     * Flujo principal: carga CSV, agrega, calcula y renderiza
      ******************************************************************/
-    let cached = { tickets:[], chats:[], calls:[] };
+    let cache = { tickets:[], chats:[], calls:[] };
+
     async function loadAndRender(){
       try{
-        // Mostrar hora de sincronización
         const now = new Date();
         document.getElementById('lastSync').textContent = 'Última sincronización: ' + formatHHmm(now);
 
-        // Leer hojas (paralelo)
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
-          fetchSheetRows(SHEETS.tickets),
-          fetchSheetRows(SHEETS.chats),
-          fetchSheetRows(SHEETS.calls)
+          fetchSheetCSVRows(SHEETS.tickets),
+          fetchSheetCSVRows(SHEETS.chats),
+          fetchSheetCSVRows(SHEETS.calls)
         ]);
 
-        // Guardar cache
-        cached.tickets = ticketsRows;
-        cached.chats = chatsRows;
-        cached.calls = callsRows;
+        cache.tickets = ticketsRows;
+        cache.chats = chatsRows;
+        cache.calls = callsRows;
 
-        // Aplicar filtros iniciales (sin rango)
         applyFiltersAndRender();
       } catch(err){
         console.error(err);
@@ -430,54 +457,43 @@
       }
     }
 
-    /******************************************************************
-     * Aplica filtros desde la UI y renderiza
-     ******************************************************************/
     function applyFiltersAndRender(){
-      // Leer rango de fechas desde inputs
       const fromVal = document.getElementById('dateFrom').value;
       const toVal   = document.getElementById('dateTo').value;
-      // Convertir a Date (sin hora) para comparaciones inclusivas
       const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
       const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
 
-      // Nota: según tu instrucción, las fechas de Tickets_BD deben sumarse +1 día.
-      // En esta implementación, las fechas de tickets no se usan para contar tickets (se cuentan solo tickets sin fecha).
-      // Para chats y llamadas usamos sus columnas respectivas y las comparamos con from/to.
-      // Si deseas que tickets también se filtren por fecha (cuando H exista), puedo ajustar la lógica.
-      const counts = aggregateCounts(cached.tickets, cached.chats, cached.calls, fromDate, toDate);
+      // Para comparación por fecha usamos solo fecha (sin hora)
+      const fromDateOnly = fromDate ? new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()) : null;
+      const toDateOnly   = toDate   ? new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()) : null;
+
+      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly);
       const scores = calculateScoresFromCounts(counts);
 
-      // Poblado del select de asesores (solo la primera vez o si cambian)
       populateAdvisorFilter(scores);
 
-      // Aplicar filtro por asesor si existe
       const advisorFilter = document.getElementById('filterAdvisor').value || '';
-
       renderLeaderboard(scores, true, advisorFilter);
     }
 
-    // Botón aplicar filtros
     document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
-
-    // Cambiar filtro de asesor actualiza tabla
     document.getElementById('filterAdvisor').addEventListener('change', () => applyFiltersAndRender());
 
-    // Inicializar carga
+    // Inicializar
     loadAndRender();
 
     /******************************************************************
-     * Comentarios finales en el código:
-     * - La integración con Google Sheets se realiza mediante la API pública
-     *   gviz/tq (no requiere API key si la hoja es pública o tiene permisos).
-     * - parseSheetDate intenta convertir distintos formatos devueltos por gviz.
-     * - Reglas aplicadas:
-     *     * Tickets: se cuentan solo si la columna H está vacía (según tu instrucción).
-     *     * Chats: fecha en columna i (index 8).
-     *     * Llamadas: fecha en columna c (index 2).
-     * - Suma de +1 día para tickets: si quieres que las fechas de tickets (cuando existan)
-     *   se usen para filtrar, se debe sumar 1 día antes de comparar. Actualmente la lógica
-     *   excluye tickets con fecha; si prefieres otra cosa, lo ajusto.
+     * Comentarios sobre la corrección:
+     * - Se cambió la lectura a CSV para preservar columnas vacías y poder
+     *   indexar por letra (E -> 4, B -> 1, etc.). Esto evita que filas
+     *   con celdas vacías "acorten" el array y provoquen índices incorrectos.
+     * - Se salta la primera fila (encabezado) al contar registros.
+     * - Tickets: se cuentan solo si la columna H está vacía (regla solicitada).
+     * - Si sigues obteniendo 0 en tickets o chats, revisa:
+     *     1) Que la hoja sea pública o compartida para lectura (si no, la petición CSV falla).
+     *     2) Que las columnas realmente contengan valores en las posiciones indicadas.
+     * - Si quieres que los tickets con fecha también se cuenten aplicando
+     *   la corrección de +1 día para filtrar por rango, dime y lo activo.
      ******************************************************************/
   </script>
 </body>
