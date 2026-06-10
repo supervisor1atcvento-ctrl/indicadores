@@ -2,56 +2,38 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard de Asesores - Indicadores y Solicitudes (Corregido)</title>
+  <title>Dashboard de Asesores - Corrección Tickets</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
-      --bg:#000;
-      --card:#0f0f0f;
-      --muted:#bfbfbf;
-      --accent:orange;
-      --white:#ffffff;
-      --table-border:#222;
+      --bg:#000; --card:#0f0f0f; --muted:#bfbfbf; --accent:orange; --white:#fff; --table-border:#222;
     }
     html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--white);}
     .container{max-width:1200px;margin:24px auto;padding:20px;}
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-    h1{margin:0;font-size:20px;color:var(--accent)}
-    .meta{color:var(--muted);font-size:13px}
+    h1{color:var(--accent);margin:0 0 12px 0}
     .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-    .control {background:var(--card);padding:10px;border-radius:8px;border:1px solid #1a1a1a;}
-    input[type="date"], select, button {background:#111;color:var(--white);border:1px solid #222;padding:8px;border-radius:6px;font-size:14px}
-    button.btn {background:var(--accent);color:#000;border:none;cursor:pointer;padding:8px 12px;border-radius:6px}
+    .control{background:var(--card);padding:10px;border-radius:8px;border:1px solid #1a1a1a}
+    input[type="date"], select, button{background:#111;color:var(--white);border:1px solid #222;padding:8px;border-radius:6px}
+    button.btn{background:var(--accent);color:#000;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
     .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:900px){ .grid{grid-template-columns: 1fr 360px;} }
-
+    @media(min-width:900px){ .grid{grid-template-columns:1fr 360px;} }
     .card{background:var(--card);padding:12px;border-radius:10px;border:1px solid #1a1a1a}
     table{width:100%;border-collapse:collapse;font-size:14px}
     thead th{background:#0b0b0b;color:var(--muted);padding:10px;border-bottom:1px solid var(--table-border);text-align:left}
     tbody td{padding:10px;border-bottom:1px solid var(--table-border);vertical-align:middle}
     tbody tr.highlight{background:var(--accent);color:#000;font-weight:700}
-    .score {color:var(--accent);font-weight:700}
+    .score{color:var(--accent);font-weight:700}
     .small{font-size:12px;color:var(--muted)}
-    .action-btn{background:var(--accent);color:#000;border:none;padding:6px 8px;border-radius:6px;cursor:pointer}
-
-    .form{background:#0b0b0b;padding:12px;border-radius:8px;border:1px solid #1a1a1a}
-    .form label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
-    .form input[type="text"], .form select, .form textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:var(--white);margin-top:6px}
-    .form .submit{margin-top:12px}
     .note{font-size:12px;color:var(--muted);margin-top:8px}
+    .warning{color:orange;font-weight:700;margin-top:8px}
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <div>
-        <h1>Tablero de Rendimiento — Asesores</h1>
-        <div class="meta" id="lastSync">Última sincronización: --:--</div>
-      </div>
-      <div class="meta small" id="info">Tema: Oscuro · Acento: naranja · Hora: 24h</div>
-    </header>
+    <h1>Tablero de Rendimiento — Asesores</h1>
+    <div id="lastSync" class="small">Última sincronización: --:--</div>
 
-    <section class="controls">
+    <section class="controls" style="margin-top:12px">
       <div class="control">
         <label class="small">Fecha inicio</label>
         <input type="date" id="dateFrom">
@@ -62,204 +44,137 @@
       </div>
       <div class="control">
         <label class="small">Filtrar asesor</label>
-        <select id="filterAdvisor">
-          <option value="">Todos los asesores</option>
-        </select>
+        <select id="filterAdvisor"><option value="">Todos los asesores</option></select>
       </div>
       <div class="control" style="display:flex;align-items:flex-end">
         <button class="btn" id="applyFilters">Aplicar filtros</button>
       </div>
     </section>
 
-    <div class="grid">
+    <div class="grid" style="margin-top:16px">
       <div class="card">
         <h2 style="margin:0 0 10px 0;color:var(--muted)">Leaderboard</h2>
         <div style="overflow:auto">
           <table id="leaderboardTable" aria-live="polite">
             <thead>
               <tr>
-                <th>Pos</th>
-                <th>Asesor</th>
+                <th>Pos</th><th>Asesor</th>
                 <th>Tickets<br><span class="small">Vol / Pts</span></th>
                 <th>Llamadas<br><span class="small">Vol / Pts</span></th>
                 <th>Chats<br><span class="small">Vol / Pts</span></th>
-                <th>Puntaje Total</th>
-                <th>Acción</th>
+                <th>Puntaje Total</th><th>Acción</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-        <div class="note">
-          <strong>Reglas:</strong> Cada canal otorga 100 pts al máximo del periodo; el resto recibe puntaje proporcional. Puntaje final = promedio de los 3 canales.
-        </div>
+        <div id="fallbackNote" class="warning" style="display:none">Se aplicó un fallback: se contaron tickets sin considerar la columna de fecha (revisar datos en la hoja).</div>
+        <div class="note">Reglas: máximo por canal = 100 pts; resto proporcional; puntaje final = promedio de 3 canales.</div>
       </div>
 
-      <aside class="form">
+      <aside class="card">
         <h3 style="margin:0 0 8px 0;color:var(--muted)">Solicitud de Beneficio</h3>
         <form id="benefitForm">
-          <label>Asesor</label>
-          <input type="text" id="formAdvisor" readonly placeholder="Selecciona desde el leaderboard">
-
-          <label>Tipo de beneficio</label>
-          <select id="formBenefit" required>
+          <label class="small">Asesor</label>
+          <input type="text" id="formAdvisor" readonly style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff">
+          <label class="small" style="margin-top:8px">Tipo de beneficio</label>
+          <select id="formBenefit" style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff">
             <option value="">-- Seleccionar --</option>
-            <option>Home Office</option>
-            <option>Salida Temprana</option>
-            <option>Día de Descanso</option>
+            <option>Home Office</option><option>Salida Temprana</option><option>Día de Descanso</option>
           </select>
-
-          <label>Fecha solicitada</label>
-          <input type="date" id="formDate" required>
-
-          <label>Comentario (opcional)</label>
-          <textarea id="formComment" rows="3" placeholder="Motivo o comentario"></textarea>
-
-          <button class="btn submit" type="submit">Enviar solicitud</button>
+          <label class="small" style="margin-top:8px">Fecha solicitada</label>
+          <input type="date" id="formDate" style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff">
+          <label class="small" style="margin-top:8px">Comentario</label>
+          <textarea id="formComment" rows="3" style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff"></textarea>
+          <button class="btn" type="submit" style="margin-top:10px">Enviar solicitud</button>
         </form>
-        <div class="note" style="margin-top:10px">
-          Las solicitudes se muestran localmente (demo). Integra envío a tu backend o Google Forms según tu flujo.
-        </div>
       </aside>
     </div>
   </div>
 
   <script>
-    /******************************************************************
-     * Configuración
-     ******************************************************************/
+    /*****************************************************************
+     * Config
+     *****************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
-    const SHEETS = {
-      tickets: 'Tickets_BD',
-      chats: 'Chats_BD',
-      calls: 'Llamadas_BD'
-    };
+    const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD' };
 
-    // Mapas por letra -> índice 0-based
-    function letterToIndex(letter){
-      if(!letter) return -1;
-      return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-    }
-
-    // Columnas según tu corrección:
-    // Tickets: asesor en E -> index 4 ; fecha en H -> index 7
-    // Chats: asesor en B -> index 1 ; fecha en I -> index 8
-    // Llamadas: asesor en B -> index 1 ; fecha en C -> index 2
+    function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
     const COL = {
       tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') },
       chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
       calls:  { advisor: letterToIndex('B'), date: letterToIndex('C') }
     };
 
-    /******************************************************************
-     * Utilidades
-     ******************************************************************/
-    function formatHHmm(date){
-      const d = new Date(date);
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    function normalizeName(s){
-      if(s === null || s === undefined) return '';
-      return String(s).trim();
-    }
-
-    // Simple CSV parser that respects quoted fields
+    /*****************************************************************
+     * CSV parser (robusto)
+     *****************************************************************/
     function parseCSV(text){
       const rows = [];
-      let cur = '';
-      let row = [];
-      let inQuotes = false;
+      let cur = '', row = [], inQuotes = false;
       for(let i=0;i<text.length;i++){
-        const ch = text[i];
-        const next = text[i+1];
-        if(ch === '"' ){
-          if(inQuotes && next === '"'){ // escaped quote
-            cur += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-          continue;
+        const ch = text[i], next = text[i+1];
+        if(ch === '"'){
+          if(inQuotes && next === '"'){ cur += '"'; i++; continue; }
+          inQuotes = !inQuotes; continue;
         }
-        if(ch === ',' && !inQuotes){
-          row.push(cur);
-          cur = '';
-          continue;
-        }
+        if(ch === ',' && !inQuotes){ row.push(cur); cur=''; continue; }
         if((ch === '\n' || ch === '\r') && !inQuotes){
-          // handle CRLF
           if(ch === '\r' && next === '\n'){ i++; }
-          row.push(cur);
-          rows.push(row);
-          row = [];
-          cur = '';
-          continue;
+          row.push(cur); rows.push(row); row=[]; cur=''; continue;
         }
         cur += ch;
       }
-      // push last
-      if(cur !== '' || row.length){
-        row.push(cur);
-        rows.push(row);
-      }
+      if(cur !== '' || row.length) { row.push(cur); rows.push(row); }
       return rows;
     }
 
-    /******************************************************************
-     * Fetch CSV from Google Sheets (out:csv) — devuelve array de filas
-     * Se salta la primera fila (encabezado) en el procesamiento posterior.
-     ******************************************************************/
     async function fetchSheetCSVRows(sheetName){
       const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
       const res = await fetch(url);
       if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')');
       const text = await res.text();
-      const rows = parseCSV(text);
-      return rows; // incluye encabezado en rows[0]
+      return parseCSV(text);
     }
 
-    /******************************************************************
+    /*****************************************************************
+     * Normalización de nombres (elimina NBSP, tabs, múltiples espacios)
+     *****************************************************************/
+    function normalizeName(s){
+      if(s === null || s === undefined) return '';
+      // Reemplaza NBSP y otros espacios invisibles, luego trim
+      return String(s).replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim();
+    }
+
+    /*****************************************************************
      * Parseo de fecha flexible
-     ******************************************************************/
-    function parseSheetDateFlexible(value){
-      if(value === null || value === undefined || value === '') return null;
-      // Si viene como número (Excel serial) no lo manejamos aquí; gviz CSV suele enviar ISO o dd/mm/yyyy
-      // Intentos de parseo:
-      // 1) ISO
-      const iso = new Date(value);
-      if(!isNaN(iso.getTime())) return iso;
-      // 2) dd/mm/yyyy o dd-mm-yyyy
-      const m = String(value).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-      if(m){
-        const day = Number(m[1]), month = Number(m[2]) - 1, year = Number(m[3]);
-        return new Date(year < 100 ? 2000 + year : year, month, day);
-      }
-      // 3) yyyy/mm/dd
-      const m2 = String(value).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-      if(m2){
-        return new Date(Number(m2[1]), Number(m2[2]) - 1, Number(m2[3]));
-      }
+     *****************************************************************/
+    function parseDateFlexible(v){
+      if(v === null || v === undefined) return null;
+      const s = String(v).trim();
+      if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
+      // Intentar ISO
+      const d1 = new Date(s);
+      if(!isNaN(d1.getTime())) return d1;
+      // dd/mm/yyyy o dd-mm-yyyy
+      const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
+      // yyyy/mm/dd
+      const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
       return null;
     }
 
-    /******************************************************************
-     * Agregación de conteos por asesor
+    /*****************************************************************
+     * Agregación de conteos por asesor (mejorada)
      *
-     * Reglas aplicadas:
-     * - Tickets: se cuentan si la celda de fecha (H) está VACÍA.
-     *   (Si la celda H tiene fecha, no se cuenta ese ticket).
-     * - Chats y Calls: se cuentan si su fecha está dentro del rango (si se aplica).
-     * - Si no hay filtro de fechas, chats y llamadas se cuentan todos.
-     * - Para tickets: si deseas contar tickets con fecha aplicando +1 día para filtrar,
-     *   puedo activar esa lógica; por ahora se respeta la regla "no contar si hay fecha".
-     ******************************************************************/
+     * - Tickets: se cuentan si la celda de fecha (H) está vacía o no parseable.
+     * - Si tras la primera pasada el total de tickets es 0, se aplica un
+     *   fallback que cuenta tickets sin considerar la columna H.
+     *****************************************************************/
     function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
       const counts = {};
-      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
-
+      function ensure(n){ if(!counts[n]) counts[n] = { tickets:0, chats:0, calls:0 }; }
       function inRangeDate(d, from, to){
         if(!d) return false;
         const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -267,23 +182,24 @@
         if(to && dd > to) return false;
         return true;
       }
+      function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
 
-      // Helper to safely get cell by index (rows may be shorter)
-      function cellValue(row, idx){
-        if(!row) return '';
-        if(idx < 0) return '';
-        return (idx < row.length) ? row[idx] : '';
+      // --- Debug: mostrar primeras filas de tickets para inspección
+      console.log('Primeras 8 filas de Tickets_BD (incluye encabezado):');
+      for(let i=0;i<Math.min(8, ticketsRows.length); i++){
+        console.log(i, ticketsRows[i]);
       }
 
-      // Tickets: skip header row (assume first row is header)
-      for(let r = 1; r < ticketsRows.length; r++){
+      // Primera pasada: contar tickets solo si columna H está vacía o no parseable
+      for(let r=1; r<ticketsRows.length; r++){
         const row = ticketsRows[r];
-        const advisorRaw = cellValue(row, COL.tickets.advisor);
-        const advisor = normalizeName(advisorRaw);
+        const rawAdvisor = cell(row, COL.tickets.advisor);
+        const advisor = normalizeName(rawAdvisor);
         if(!advisor) continue;
-        const dateCell = cellValue(row, COL.tickets.date);
-        // Si la celda de fecha tiene valor -> NO contar este ticket (según instrucción)
-        if(dateCell !== null && dateCell !== undefined && String(dateCell).trim() !== ''){
+        const rawDate = cell(row, COL.tickets.date);
+        const parsed = parseDateFlexible(rawDate);
+        // Si la celda tiene valor parseable -> NO contar (según regla)
+        if(parsed) {
           // no contar
           continue;
         }
@@ -292,15 +208,15 @@
       }
 
       // Chats
-      for(let r = 1; r < chatsRows.length; r++){
+      for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
-        const advisorRaw = cellValue(row, COL.chats.advisor);
-        const advisor = normalizeName(advisorRaw);
+        const rawAdvisor = cell(row, COL.chats.advisor);
+        const advisor = normalizeName(rawAdvisor);
         if(!advisor) continue;
-        const dateCell = cellValue(row, COL.chats.date);
-        const parsed = parseSheetDateFlexible(dateCell);
+        const rawDate = cell(row, COL.chats.date);
+        const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
-          if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
+          if(!parsed) continue;
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
         ensure(advisor);
@@ -308,13 +224,13 @@
       }
 
       // Calls
-      for(let r = 1; r < callsRows.length; r++){
+      for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
-        const advisorRaw = cellValue(row, COL.calls.advisor);
-        const advisor = normalizeName(advisorRaw);
+        const rawAdvisor = cell(row, COL.calls.advisor);
+        const advisor = normalizeName(rawAdvisor);
         if(!advisor) continue;
-        const dateCell = cellValue(row, COL.calls.date);
-        const parsed = parseSheetDateFlexible(dateCell);
+        const rawDate = cell(row, COL.calls.date);
+        const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
           if(!parsed) continue;
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
@@ -323,32 +239,41 @@
         counts[advisor].calls += 1;
       }
 
-      return counts;
+      // Si tickets suman 0, aplicar fallback: contar tickets independientemente de la columna H
+      const totalTickets = Object.values(counts).reduce((s,c)=>s+c.tickets,0);
+      let fallbackApplied = false;
+      if(totalTickets === 0){
+        // fallback: contar por advisor sin chequear fecha
+        for(let r=1; r<ticketsRows.length; r++){
+          const row = ticketsRows[r];
+          const rawAdvisor = cell(row, COL.tickets.advisor);
+          const advisor = normalizeName(rawAdvisor);
+          if(!advisor) continue;
+          ensure(advisor);
+          counts[advisor].tickets += 1;
+        }
+        fallbackApplied = true;
+      }
+
+      return { counts, fallbackApplied };
     }
 
-    /******************************************************************
-     * Cálculo de puntajes proporcionales (comentarios en el código)
-     *
-     * - Se identifica el máximo por canal (tickets, calls, chats).
-     * - El asesor con el máximo recibe 100 pts en ese canal.
-     * - Los demás reciben (volumen / max) * 100.
-     * - Puntaje total = promedio de los 3 canales.
-     ******************************************************************/
+    /*****************************************************************
+     * Cálculo de puntajes proporcionales
+     *****************************************************************/
     function calculateScoresFromCounts(countsObj){
-      const advisors = Object.keys(countsObj);
+      const counts = countsObj;
+      const advisors = Object.keys(counts);
       if(advisors.length === 0) return [];
-
-      let maxTickets = 0, maxCalls = 0, maxChats = 0;
-      advisors.forEach(name => {
-        const c = countsObj[name];
+      let maxTickets=0, maxCalls=0, maxChats=0;
+      advisors.forEach(n => {
+        const c = counts[n];
         if(c.tickets > maxTickets) maxTickets = c.tickets;
         if(c.calls > maxCalls) maxCalls = c.calls;
         if(c.chats > maxChats) maxChats = c.chats;
       });
-
       const arr = advisors.map(name => {
-        const c = countsObj[name];
-        // Si el máximo es 0 en un canal, todos reciben 0 en ese canal
+        const c = counts[name];
         const ticketPts = maxTickets ? (c.tickets / maxTickets) * 100 : 0;
         const callPts   = maxCalls   ? (c.calls   / maxCalls)   * 100 : 0;
         const chatPts   = maxChats   ? (c.chats   / maxChats)   * 100 : 0;
@@ -364,15 +289,14 @@
           total: Number(total.toFixed(2))
         };
       });
-
-      arr.sort((a,b) => b.total - a.total);
+      arr.sort((a,b)=>b.total - a.total);
       return arr;
     }
 
-    /******************************************************************
-     * Renderizado y UI
-     ******************************************************************/
-    function renderLeaderboard(scores, highlightTop = true, advisorFilter = ''){
+    /*****************************************************************
+     * Renderizado
+     *****************************************************************/
+    function renderLeaderboard(scores, highlightTop=true, advisorFilter=''){
       const tbody = document.querySelector('#leaderboardTable tbody');
       tbody.innerHTML = '';
       scores.forEach((row, idx) => {
@@ -386,34 +310,74 @@
           <td>${row.calls} / ${row.callPts}</td>
           <td>${row.chats} / ${row.chatPts}</td>
           <td class="score">${row.total}</td>
-          <td><button class="action-btn" data-advisor="${escapeHtml(row.name)}">Solicitar</button></td>
+          <td><button class="btn" data-advisor="${escapeHtml(row.name)}">Solicitar</button></td>
         `;
         tbody.appendChild(tr);
       });
-
-      tbody.querySelectorAll('button.action-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const name = e.currentTarget.getAttribute('data-advisor');
-          openRequestForm(name);
-        });
-      });
+      tbody.querySelectorAll('button.btn').forEach(b => b.addEventListener('click', e => {
+        const name = e.currentTarget.getAttribute('data-advisor');
+        document.getElementById('formAdvisor').value = name;
+        document.getElementById('formAdvisor').scrollIntoView({behavior:'smooth', block:'center'});
+      }));
     }
 
     function populateAdvisorFilter(scores){
       const sel = document.getElementById('filterAdvisor');
-      sel.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+      sel.querySelectorAll('option:not(:first-child)').forEach(o=>o.remove());
       scores.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.name;
-        opt.textContent = s.name;
-        sel.appendChild(opt);
+        const opt = document.createElement('option'); opt.value = s.name; opt.textContent = s.name; sel.appendChild(opt);
       });
     }
 
-    function openRequestForm(advisorName){
-      document.getElementById('formAdvisor').value = advisorName;
-      document.getElementById('formAdvisor').scrollIntoView({behavior:'smooth', block:'center'});
+    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    /*****************************************************************
+     * Flujo principal
+     *****************************************************************/
+    let cache = { tickets:[], chats:[], calls:[] };
+
+    async function loadAndRender(){
+      try{
+        document.getElementById('lastSync').textContent = 'Última sincronización: ' + formatHHmm(new Date());
+        const [ticketsRows, chatsRows, callsRows] = await Promise.all([
+          fetchSheetCSVRows(SHEETS.tickets),
+          fetchSheetCSVRows(SHEETS.chats),
+          fetchSheetCSVRows(SHEETS.calls)
+        ]);
+        cache.tickets = ticketsRows; cache.chats = chatsRows; cache.calls = callsRows;
+        applyFiltersAndRender();
+      } catch(err){
+        console.error(err); alert('Error al cargar datos: ' + err.message);
+      }
     }
+
+    function formatHHmm(date){
+      const d = new Date(date); const hh = String(d.getHours()).padStart(2,'0'); const mm = String(d.getMinutes()).padStart(2,'0'); return `${hh}:${mm}`;
+    }
+
+    function applyFiltersAndRender(){
+      const fromVal = document.getElementById('dateFrom').value;
+      const toVal   = document.getElementById('dateTo').value;
+      const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+      const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
+      const fromDateOnly = fromDate ? new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()) : null;
+      const toDateOnly   = toDate   ? new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()) : null;
+
+      const { counts, fallbackApplied } = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly);
+      const scores = calculateScoresFromCounts(counts);
+      populateAdvisorFilter(scores);
+      const advisorFilter = document.getElementById('filterAdvisor').value || '';
+      renderLeaderboard(scores, true, advisorFilter);
+
+      // Mostrar nota si fallback aplicado
+      document.getElementById('fallbackNote').style.display = fallbackApplied ? 'block' : 'none';
+      if(fallbackApplied){
+        console.warn('Fallback aplicado: tickets contados sin considerar columna H (fecha). Revisa la hoja Tickets_BD.');
+      }
+    }
+
+    document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
+    document.getElementById('filterAdvisor').addEventListener('change', () => applyFiltersAndRender());
 
     document.getElementById('benefitForm').addEventListener('submit', function(e){
       e.preventDefault();
@@ -423,78 +387,11 @@
       const comment = document.getElementById('formComment').value;
       if(!advisor){ alert('Selecciona un asesor desde el leaderboard.'); return; }
       alert(`Solicitud enviada:\nAsesor: ${advisor}\nBeneficio: ${benefit}\nFecha: ${date}\nComentario: ${comment || '-'}`);
-      document.getElementById('formBenefit').value = '';
-      document.getElementById('formDate').value = '';
-      document.getElementById('formComment').value = '';
+      document.getElementById('formBenefit').value=''; document.getElementById('formDate').value=''; document.getElementById('formComment').value='';
     });
-
-    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    /******************************************************************
-     * Flujo principal: carga CSV, agrega, calcula y renderiza
-     ******************************************************************/
-    let cache = { tickets:[], chats:[], calls:[] };
-
-    async function loadAndRender(){
-      try{
-        const now = new Date();
-        document.getElementById('lastSync').textContent = 'Última sincronización: ' + formatHHmm(now);
-
-        const [ticketsRows, chatsRows, callsRows] = await Promise.all([
-          fetchSheetCSVRows(SHEETS.tickets),
-          fetchSheetCSVRows(SHEETS.chats),
-          fetchSheetCSVRows(SHEETS.calls)
-        ]);
-
-        cache.tickets = ticketsRows;
-        cache.chats = chatsRows;
-        cache.calls = callsRows;
-
-        applyFiltersAndRender();
-      } catch(err){
-        console.error(err);
-        alert('Error al cargar datos: ' + err.message);
-      }
-    }
-
-    function applyFiltersAndRender(){
-      const fromVal = document.getElementById('dateFrom').value;
-      const toVal   = document.getElementById('dateTo').value;
-      const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
-      const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
-
-      // Para comparación por fecha usamos solo fecha (sin hora)
-      const fromDateOnly = fromDate ? new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()) : null;
-      const toDateOnly   = toDate   ? new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()) : null;
-
-      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly);
-      const scores = calculateScoresFromCounts(counts);
-
-      populateAdvisorFilter(scores);
-
-      const advisorFilter = document.getElementById('filterAdvisor').value || '';
-      renderLeaderboard(scores, true, advisorFilter);
-    }
-
-    document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
-    document.getElementById('filterAdvisor').addEventListener('change', () => applyFiltersAndRender());
 
     // Inicializar
     loadAndRender();
-
-    /******************************************************************
-     * Comentarios sobre la corrección:
-     * - Se cambió la lectura a CSV para preservar columnas vacías y poder
-     *   indexar por letra (E -> 4, B -> 1, etc.). Esto evita que filas
-     *   con celdas vacías "acorten" el array y provoquen índices incorrectos.
-     * - Se salta la primera fila (encabezado) al contar registros.
-     * - Tickets: se cuentan solo si la columna H está vacía (regla solicitada).
-     * - Si sigues obteniendo 0 en tickets o chats, revisa:
-     *     1) Que la hoja sea pública o compartida para lectura (si no, la petición CSV falla).
-     *     2) Que las columnas realmente contengan valores en las posiciones indicadas.
-     * - Si quieres que los tickets con fecha también se cuenten aplicando
-     *   la corrección de +1 día para filtrar por rango, dime y lo activo.
-     ******************************************************************/
   </script>
 </body>
 </html>
