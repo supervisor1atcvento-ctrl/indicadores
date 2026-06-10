@@ -2,113 +2,151 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard de Asesores - Corrección Tickets</title>
+  <title>Dashboard Asesores — Indicadores</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
+    /* Tema Oscuro Profesional */
     :root{
-      --bg:#000; --card:#0f0f0f; --muted:#bfbfbf; --accent:orange; --white:#fff; --table-border:#222;
+      --bg:#000;
+      --card:#0f0f0f;
+      --muted:#bfbfbf;
+      --accent:orange;
+      --white:#ffffff;
+      --table-border:#222;
     }
     html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--white);}
-    .container{max-width:1200px;margin:24px auto;padding:20px;}
-    h1{color:var(--accent);margin:0 0 12px 0}
+    .container{max-width:1200px;margin:20px auto;padding:18px;}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    h1{margin:0;font-size:20px;color:var(--accent)}
+    .meta{color:var(--muted);font-size:13px}
     .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-    .control{background:var(--card);padding:10px;border-radius:8px;border:1px solid #1a1a1a}
-    input[type="date"], select, button{background:#111;color:var(--white);border:1px solid #222;padding:8px;border-radius:6px}
-    button.btn{background:var(--accent);color:#000;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+    .control {background:var(--card);padding:10px;border-radius:8px;border:1px solid #1a1a1a;}
+    input[type="date"], select, button {background:#111;color:var(--white);border:1px solid #222;padding:8px;border-radius:6px;font-size:14px}
+    button.btn {background:var(--accent);color:#000;border:none;cursor:pointer;padding:8px 12px;border-radius:6px}
     .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:900px){ .grid{grid-template-columns:1fr 360px;} }
+    @media(min-width:980px){ .grid{grid-template-columns:1fr 360px;} }
+
+    /* Tabla leaderboard */
     .card{background:var(--card);padding:12px;border-radius:10px;border:1px solid #1a1a1a}
     table{width:100%;border-collapse:collapse;font-size:14px}
     thead th{background:#0b0b0b;color:var(--muted);padding:10px;border-bottom:1px solid var(--table-border);text-align:left}
     tbody td{padding:10px;border-bottom:1px solid var(--table-border);vertical-align:middle}
     tbody tr.highlight{background:var(--accent);color:#000;font-weight:700}
-    .score{color:var(--accent);font-weight:700}
+    .score {color:var(--accent);font-weight:700}
     .small{font-size:12px;color:var(--muted)}
+    .action-btn{background:var(--accent);color:#000;border:none;padding:6px 8px;border-radius:6px;cursor:pointer}
+
     .note{font-size:12px;color:var(--muted);margin-top:8px}
-    .warning{color:orange;font-weight:700;margin-top:8px}
+    .footer-note{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Tablero de Rendimiento — Asesores</h1>
-    <div id="lastSync" class="small">Última sincronización: --:--</div>
+    <header>
+      <div>
+        <h1>Tablero de Rendimiento — Asesores</h1>
+        <div class="meta" id="lastSync">Última sincronización: --:--</div>
+      </div>
+      <div class="meta small">Tema: Oscuro · Acento: naranja · Hora: 24h</div>
+    </header>
 
-    <section class="controls" style="margin-top:12px">
+    <!-- Filtros -->
+    <section class="controls" aria-label="Filtros">
       <div class="control">
-        <label class="small">Fecha inicio</label>
+        <label class="small">Fecha inicio (filtros Chats/Llamadas)</label>
         <input type="date" id="dateFrom">
       </div>
       <div class="control">
-        <label class="small">Fecha fin</label>
+        <label class="small">Fecha fin (filtros Chats/Llamadas)</label>
         <input type="date" id="dateTo">
       </div>
       <div class="control">
         <label class="small">Filtrar asesor</label>
-        <select id="filterAdvisor"><option value="">Todos los asesores</option></select>
+        <select id="filterAdvisor">
+          <option value="">Todos los asesores</option>
+        </select>
       </div>
       <div class="control" style="display:flex;align-items:flex-end">
         <button class="btn" id="applyFilters">Aplicar filtros</button>
       </div>
     </section>
 
-    <div class="grid" style="margin-top:16px">
-      <div class="card">
+    <div class="grid">
+      <!-- Leaderboard -->
+      <div class="card" role="region" aria-label="Leaderboard">
         <h2 style="margin:0 0 10px 0;color:var(--muted)">Leaderboard</h2>
         <div style="overflow:auto">
           <table id="leaderboardTable" aria-live="polite">
             <thead>
               <tr>
-                <th>Pos</th><th>Asesor</th>
+                <th>Pos</th>
+                <th>Asesor</th>
                 <th>Tickets<br><span class="small">Vol / Pts</span></th>
                 <th>Llamadas<br><span class="small">Vol / Pts</span></th>
                 <th>Chats<br><span class="small">Vol / Pts</span></th>
-                <th>Puntaje Total</th><th>Acción</th>
+                <th>Puntaje Total</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-        <div id="fallbackNote" class="warning" style="display:none">Se aplicó un fallback: se contaron tickets sin considerar la columna de fecha (revisar datos en la hoja).</div>
-        <div class="note">Reglas: máximo por canal = 100 pts; resto proporcional; puntaje final = promedio de 3 canales.</div>
+        <div class="note">
+          <strong>Reglas de conteo:</strong> se contabiliza cuántas veces aparece cada asesor en cada base.
+        </div>
+        <div class="note">
+          <strong>Reglas de puntuación:</strong> para cada canal, el asesor con mayor volumen obtiene 100 pts; los demás reciben (volumen / máximo) * 100. Puntaje final = promedio de los 3 canales. Tabla ordenada por puntaje total descendente.
+        </div>
       </div>
 
-      <aside class="card">
-        <h3 style="margin:0 0 8px 0;color:var(--muted)">Solicitud de Beneficio</h3>
-        <form id="benefitForm">
-          <label class="small">Asesor</label>
-          <input type="text" id="formAdvisor" readonly style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff">
-          <label class="small" style="margin-top:8px">Tipo de beneficio</label>
-          <select id="formBenefit" style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff">
-            <option value="">-- Seleccionar --</option>
-            <option>Home Office</option><option>Salida Temprana</option><option>Día de Descanso</option>
-          </select>
-          <label class="small" style="margin-top:8px">Fecha solicitada</label>
-          <input type="date" id="formDate" style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff">
-          <label class="small" style="margin-top:8px">Comentario</label>
-          <textarea id="formComment" rows="3" style="width:100%;padding:8px;border-radius:6px;background:#111;border:1px solid #222;color:#fff"></textarea>
-          <button class="btn" type="submit" style="margin-top:10px">Enviar solicitud</button>
-        </form>
+      <!-- Panel lateral (información y controles) -->
+      <aside class="card" role="region" aria-label="Información">
+        <h3 style="margin:0 0 8px 0;color:var(--muted)">Información</h3>
+        <div class="note">Se cuentan todas las ocurrencias en la columna indicada para cada base. Los filtros de fecha aplican únicamente a Chats y Llamadas.</div>
+        <div class="note" style="margin-top:10px">Columnas usadas: Tickets E (asesor), Chats B (asesor) fecha I, Llamadas B (asesor) fecha C.</div>
       </aside>
     </div>
+
+    <div class="footer-note">Integración: Google Sheets (gviz CSV). Asegúrate de que el spreadsheet sea accesible públicamente para lectura.</div>
   </div>
 
   <script>
-    /*****************************************************************
-     * Config
-     *****************************************************************/
+    /******************************************************************
+     * CONFIGURACIÓN
+     * - ID del spreadsheet y nombres de pestañas
+     * - Mapeo de columnas (0-based)
+     ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
     const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD' };
 
     function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
+
+    // Según tu instrucción final: tickets se toma TODO de la columna E (conteo de ocurrencias)
     const COL = {
-      tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') },
+      tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') }, // fecha H ya no afecta conteo de tickets
       chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
       calls:  { advisor: letterToIndex('B'), date: letterToIndex('C') }
     };
 
-    /*****************************************************************
-     * CSV parser (robusto)
-     *****************************************************************/
+    /******************************************************************
+     * UTILIDADES
+     ******************************************************************/
+    function formatHHmm(date){
+      const d = new Date(date);
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      return `${hh}:${mm}`;
+    }
+
+    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function normalizeName(s){
+      if(s === null || s === undefined) return '';
+      return String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
+    }
+
+    /******************************************************************
+     * PARSER CSV robusto
+     ******************************************************************/
     function parseCSV(text){
       const rows = [];
       let cur = '', row = [], inQuotes = false;
@@ -137,44 +175,35 @@
       return parseCSV(text);
     }
 
-    /*****************************************************************
-     * Normalización de nombres (elimina NBSP, tabs, múltiples espacios)
-     *****************************************************************/
-    function normalizeName(s){
-      if(s === null || s === undefined) return '';
-      // Reemplaza NBSP y otros espacios invisibles, luego trim
-      return String(s).replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim();
-    }
-
-    /*****************************************************************
-     * Parseo de fecha flexible
-     *****************************************************************/
+    /******************************************************************
+     * Parseo de fecha flexible (varios formatos)
+     ******************************************************************/
     function parseDateFlexible(v){
       if(v === null || v === undefined) return null;
       const s = String(v).trim();
       if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
-      // Intentar ISO
       const d1 = new Date(s);
       if(!isNaN(d1.getTime())) return d1;
-      // dd/mm/yyyy o dd-mm-yyyy
       const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
       if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
-      // yyyy/mm/dd
       const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
       if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
       return null;
     }
 
-    /*****************************************************************
-     * Agregación de conteos por asesor (mejorada)
+    /******************************************************************
+     * AGREGACIÓN: contar ocurrencias por asesor en cada base
      *
-     * - Tickets: se cuentan si la celda de fecha (H) está vacía o no parseable.
-     * - Si tras la primera pasada el total de tickets es 0, se aplica un
-     *   fallback que cuenta tickets sin considerar la columna H.
-     *****************************************************************/
+     * Interpretación final solicitada por el usuario:
+     * - Tickets: contar todas las ocurrencias del asesor en la columna E (sin excluir por fecha).
+     * - Chats: contar ocurrencias en columna B; si hay filtro de fecha, aplicar usando columna I.
+     * - Calls: contar ocurrencias en columna B; si hay filtro de fecha, aplicar usando columna C.
+     *
+     * Devuelve: counts { asesor: { tickets, chats, calls } }
+     ******************************************************************/
     function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
       const counts = {};
-      function ensure(n){ if(!counts[n]) counts[n] = { tickets:0, chats:0, calls:0 }; }
+      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
       function inRangeDate(d, from, to){
         if(!d) return false;
         const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -184,30 +213,18 @@
       }
       function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
 
-      // --- Debug: mostrar primeras filas de tickets para inspección
-      console.log('Primeras 8 filas de Tickets_BD (incluye encabezado):');
-      for(let i=0;i<Math.min(8, ticketsRows.length); i++){
-        console.log(i, ticketsRows[i]);
-      }
-
-      // Primera pasada: contar tickets solo si columna H está vacía o no parseable
+      // Tickets: contar todas las ocurrencias en columna E (index 4)
+      // Se asume que la primera fila es encabezado; iteramos desde r=1
       for(let r=1; r<ticketsRows.length; r++){
         const row = ticketsRows[r];
         const rawAdvisor = cell(row, COL.tickets.advisor);
         const advisor = normalizeName(rawAdvisor);
         if(!advisor) continue;
-        const rawDate = cell(row, COL.tickets.date);
-        const parsed = parseDateFlexible(rawDate);
-        // Si la celda tiene valor parseable -> NO contar (según regla)
-        if(parsed) {
-          // no contar
-          continue;
-        }
         ensure(advisor);
         counts[advisor].tickets += 1;
       }
 
-      // Chats
+      // Chats: contar por columna B; si hay filtro de fechas, usar columna I
       for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
         const rawAdvisor = cell(row, COL.chats.advisor);
@@ -216,14 +233,14 @@
         const rawDate = cell(row, COL.chats.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
-          if(!parsed) continue;
+          if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
         ensure(advisor);
         counts[advisor].chats += 1;
       }
 
-      // Calls
+      // Calls: contar por columna B; si hay filtro de fechas, usar columna C
       for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
         const rawAdvisor = cell(row, COL.calls.advisor);
@@ -239,39 +256,30 @@
         counts[advisor].calls += 1;
       }
 
-      // Si tickets suman 0, aplicar fallback: contar tickets independientemente de la columna H
-      const totalTickets = Object.values(counts).reduce((s,c)=>s+c.tickets,0);
-      let fallbackApplied = false;
-      if(totalTickets === 0){
-        // fallback: contar por advisor sin chequear fecha
-        for(let r=1; r<ticketsRows.length; r++){
-          const row = ticketsRows[r];
-          const rawAdvisor = cell(row, COL.tickets.advisor);
-          const advisor = normalizeName(rawAdvisor);
-          if(!advisor) continue;
-          ensure(advisor);
-          counts[advisor].tickets += 1;
-        }
-        fallbackApplied = true;
-      }
-
-      return { counts, fallbackApplied };
+      return counts;
     }
 
-    /*****************************************************************
-     * Cálculo de puntajes proporcionales
-     *****************************************************************/
+    /******************************************************************
+     * CÁLCULO DE PUNTAJES PROPORCIONALES
+     *
+     * - Para cada canal se identifica el máximo (volumen más alto).
+     * - Ese asesor obtiene 100 pts en ese canal.
+     * - Los demás reciben (volumen / máximo) * 100.
+     * - Puntaje total = promedio de los 3 canales.
+     ******************************************************************/
     function calculateScoresFromCounts(countsObj){
       const counts = countsObj;
       const advisors = Object.keys(counts);
       if(advisors.length === 0) return [];
-      let maxTickets=0, maxCalls=0, maxChats=0;
-      advisors.forEach(n => {
-        const c = counts[n];
+
+      let maxTickets = 0, maxCalls = 0, maxChats = 0;
+      advisors.forEach(name => {
+        const c = counts[name];
         if(c.tickets > maxTickets) maxTickets = c.tickets;
         if(c.calls > maxCalls) maxCalls = c.calls;
         if(c.chats > maxChats) maxChats = c.chats;
       });
+
       const arr = advisors.map(name => {
         const c = counts[name];
         const ticketPts = maxTickets ? (c.tickets / maxTickets) * 100 : 0;
@@ -289,14 +297,16 @@
           total: Number(total.toFixed(2))
         };
       });
-      arr.sort((a,b)=>b.total - a.total);
+
+      // Orden descendente por puntaje total
+      arr.sort((a,b) => b.total - a.total);
       return arr;
     }
 
-    /*****************************************************************
-     * Renderizado
-     *****************************************************************/
-    function renderLeaderboard(scores, highlightTop=true, advisorFilter=''){
+    /******************************************************************
+     * RENDERIZADO
+     ******************************************************************/
+    function renderLeaderboard(scores, highlightTop = true, advisorFilter = ''){
       const tbody = document.querySelector('#leaderboardTable tbody');
       tbody.innerHTML = '';
       scores.forEach((row, idx) => {
@@ -310,30 +320,25 @@
           <td>${row.calls} / ${row.callPts}</td>
           <td>${row.chats} / ${row.chatPts}</td>
           <td class="score">${row.total}</td>
-          <td><button class="btn" data-advisor="${escapeHtml(row.name)}">Solicitar</button></td>
         `;
         tbody.appendChild(tr);
       });
-      tbody.querySelectorAll('button.btn').forEach(b => b.addEventListener('click', e => {
-        const name = e.currentTarget.getAttribute('data-advisor');
-        document.getElementById('formAdvisor').value = name;
-        document.getElementById('formAdvisor').scrollIntoView({behavior:'smooth', block:'center'});
-      }));
     }
 
     function populateAdvisorFilter(scores){
       const sel = document.getElementById('filterAdvisor');
-      sel.querySelectorAll('option:not(:first-child)').forEach(o=>o.remove());
+      sel.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
       scores.forEach(s => {
-        const opt = document.createElement('option'); opt.value = s.name; opt.textContent = s.name; sel.appendChild(opt);
+        const opt = document.createElement('option');
+        opt.value = s.name;
+        opt.textContent = s.name;
+        sel.appendChild(opt);
       });
     }
 
-    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    /*****************************************************************
-     * Flujo principal
-     *****************************************************************/
+    /******************************************************************
+     * FLUJO PRINCIPAL: carga datos, agrega, calcula y renderiza
+     ******************************************************************/
     let cache = { tickets:[], chats:[], calls:[] };
 
     async function loadAndRender(){
@@ -344,15 +349,14 @@
           fetchSheetCSVRows(SHEETS.chats),
           fetchSheetCSVRows(SHEETS.calls)
         ]);
-        cache.tickets = ticketsRows; cache.chats = chatsRows; cache.calls = callsRows;
+        cache.tickets = ticketsRows;
+        cache.chats = chatsRows;
+        cache.calls = callsRows;
         applyFiltersAndRender();
       } catch(err){
-        console.error(err); alert('Error al cargar datos: ' + err.message);
+        console.error(err);
+        alert('Error al cargar datos: ' + err.message + '. Ver consola para más detalles.');
       }
-    }
-
-    function formatHHmm(date){
-      const d = new Date(date); const hh = String(d.getHours()).padStart(2,'0'); const mm = String(d.getMinutes()).padStart(2,'0'); return `${hh}:${mm}`;
     }
 
     function applyFiltersAndRender(){
@@ -363,35 +367,42 @@
       const fromDateOnly = fromDate ? new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()) : null;
       const toDateOnly   = toDate   ? new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()) : null;
 
-      const { counts, fallbackApplied } = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly);
+      // Agregar conteos: tickets (todas las ocurrencias en E), chats y calls con filtro de fecha si aplica
+      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly);
       const scores = calculateScoresFromCounts(counts);
+
       populateAdvisorFilter(scores);
+
       const advisorFilter = document.getElementById('filterAdvisor').value || '';
       renderLeaderboard(scores, true, advisorFilter);
-
-      // Mostrar nota si fallback aplicado
-      document.getElementById('fallbackNote').style.display = fallbackApplied ? 'block' : 'none';
-      if(fallbackApplied){
-        console.warn('Fallback aplicado: tickets contados sin considerar columna H (fecha). Revisa la hoja Tickets_BD.');
-      }
     }
 
     document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
     document.getElementById('filterAdvisor').addEventListener('change', () => applyFiltersAndRender());
 
-    document.getElementById('benefitForm').addEventListener('submit', function(e){
-      e.preventDefault();
-      const advisor = document.getElementById('formAdvisor').value;
-      const benefit = document.getElementById('formBenefit').value;
-      const date = document.getElementById('formDate').value;
-      const comment = document.getElementById('formComment').value;
-      if(!advisor){ alert('Selecciona un asesor desde el leaderboard.'); return; }
-      alert(`Solicitud enviada:\nAsesor: ${advisor}\nBeneficio: ${benefit}\nFecha: ${date}\nComentario: ${comment || '-'}`);
-      document.getElementById('formBenefit').value=''; document.getElementById('formDate').value=''; document.getElementById('formComment').value='';
-    });
-
     // Inicializar
     loadAndRender();
+
+    /******************************************************************
+     * COMENTARIOS EN EL CÓDIGO
+     *
+     * - Integración con Google Sheets: se usa la exportación CSV pública
+     *   (gviz/tq?tqx=out:csv). La hoja debe ser accesible públicamente.
+     * - Conteo de tickets: ahora se cuentan todas las ocurrencias del asesor
+     *   en la columna E (índice 4), sin excluir por fecha.
+     * - Chats y Llamadas: se cuentan por ocurrencias en columna B; si se aplica
+     *   rango de fechas, se filtran usando las columnas I (chats) y C (llamadas).
+     * - Puntuación: proporcional por canal; total = promedio de los 3 canales.
+     *
+     * - Si después de esto los tickets siguen en 0:
+     *   1) Abre en el navegador la URL CSV de la pestaña Tickets_BD:
+     *      https://docs.google.com/spreadsheets/d/REPLACE_ID/gviz/tq?tqx=out:csv&sheet=Tickets_BD
+     *      (sustituye REPLACE_ID por el ID del spreadsheet) y verifica que la columna E
+     *      contenga los nombres y que la hoja sea pública.
+     *   2) Revisa en la consola del navegador (F12 → Console) si hay errores o si
+     *      las primeras filas (cache.tickets) se imprimen correctamente.
+     *
+     ******************************************************************/
   </script>
 </body>
 </html>
