@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Asesores</title>
+  <style>
+    /* 🎨 Tema Oscuro Profesional */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: orange;
+    }
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .filters input, .filters select {
+      padding: 5px;
+      border-radius: 4px;
+      border: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      background-color: #111;
+    }
+    tr.highlight {
+      background-color: orange;
+      color: #000;
+      font-weight: bold;
+    }
+    .btn {
+      background-color: orange;
+      color: #000;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-container {
+      background: #111;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: auto;
+    }
+    .form-container h2 {
+      color: orange;
+    }
+    .form-container label {
+      display: block;
+      margin-top: 10px;
+    }
+    .form-container select, .form-container input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: none;
+    }
+    .form-container button {
+      margin-top: 15px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tablero de Rendimiento</h1>
+
+  <!-- 🔎 Filtros dinámicos -->
+  <div class="filters">
+    <input type="date" id="filterDate">
+    <select id="filterAdvisor">
+      <option value="">Todos los asesores</option>
+    </select>
+  </div>
+
+  <!-- 📊 Leaderboard -->
+  <table id="leaderboard">
+    <thead>
+      <tr>
+        <th>Posición</th>
+        <th>Asesor</th>
+        <th>Tickets (Volumen / Puntos)</th>
+        <th>Llamadas (Volumen / Puntos)</th>
+        <th>Chats (Volumen / Puntos)</th>
+        <th>Puntaje Total</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- 📝 Formulario de Solicitud -->
+  <div class="form-container" id="benefitForm" style="display:none;">
+    <h2>Solicitud de Beneficio</h2>
+    <form id="requestForm">
+      <label for="advisorName">Nombre del Asesor</label>
+      <input type="text" id="advisorName" readonly>
+
+      <label for="benefitType">Tipo de Beneficio</label>
+      <select id="benefitType" required>
+        <option value="">Seleccione...</option>
+        <option value="Home Office">Home Office</option>
+        <option value="Salida Temprana">Salida Temprana</option>
+        <option value="Día de Descanso">Día de Descanso</option>
+      </select>
+
+      <button type="submit" class="btn">Enviar Solicitud</button>
+    </form>
+  </div>
+
+  <script>
+    // 📡 Función para leer datos de Google Sheets usando gviz API
+    async function fetchSheetData(sheetName) {
+      const url = `https://docs.google.com/spreadsheets/d/1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+      const res = await fetch(url);
+      const text = await res.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(r => r.c.map(c => c ? c.v : ""));
+    }
+
+    // ⚙️ Cálculo de puntos proporcionales
+    function calculateScores(ticketsData, chatsData, callsData) {
+      const advisors = {};
+
+      // Consolidar datos por asesor
+      function addData(data, type) {
+        data.forEach(row => {
+          const name = row[0];
+          const volume = parseInt(row[1]) || 0;
+          if (!advisors[name]) advisors[name] = {tickets:0, chats:0, calls:0};
+          advisors[name][type] += volume;
+        });
+      }
+
+      addData(ticketsData, "tickets");
+      addData(chatsData, "chats");
+      addData(callsData, "calls");
+
+      // Calcular máximos
+      const maxTickets = Math.max(...Object.values(advisors).map(a => a.tickets));
+      const maxChats = Math.max(...Object.values(advisors).map(a => a.chats));
+      const maxCalls = Math.max(...Object.values(advisors).map(a => a.calls));
+
+      // Asignar puntos proporcionales
+      const leaderboard = Object.entries(advisors).map(([name, stats]) => {
+        const ticketPoints = maxTickets ? (stats.tickets / maxTickets) * 100 : 0;
+        const chatPoints = maxChats ? (stats.chats / maxChats) * 100 : 0;
+        const callPoints = maxCalls ? (stats.calls / maxCalls) * 100 : 0;
+        const total = ((ticketPoints + chatPoints + callPoints) / 3).toFixed(2);
+        return {
+          name,
+          tickets: stats.tickets,
+          ticketPoints: ticketPoints.toFixed(2),
+          chats: stats.chats,
+          chatPoints: chatPoints.toFixed(2),
+          calls: stats.calls,
+          callPoints: callPoints.toFixed(2),
+          total: parseFloat(total)
+        };
+      });
+
+      // Ordenar por puntaje total
+      leaderboard.sort((a,b) => b.total - a.total);
+      return leaderboard;
+    }
+
+    // 🖥️ Renderizar tabla
+    function renderLeaderboard(data) {
+      const tbody = document.querySelector("#leaderboard tbody");
+      tbody.innerHTML = "";
+      data.forEach((advisor, index) => {
+        const tr = document.createElement("tr");
+        if (index === 0) tr.classList.add("highlight");
+        tr.innerHTML = `
+          <td>${index+1}</td>
+          <td>${advisor.name}</td>
+          <td>${advisor.tickets} / ${advisor.ticketPoints}</td>
+          <td>${advisor.calls} / ${advisor.callPoints}</td>
+          <td>${advisor.chats} / ${advisor.chatPoints}</td>
+          <td style="color:orange">${advisor.total}</td>
+          <td><button class="btn" onclick="openForm('${advisor.name}')">Solicitar Beneficio</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 📋 Abrir formulario
+    function openForm(name) {
+      document.getElementById("advisorName").value = name;
+      document.getElementById("benefitForm").style.display = "block";
+    }
+
+    // 📨 Manejo de envío de solicitud
+    document.getElementById("requestForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const name = document.getElementById("advisorName").value;
+      const benefit = document.getElementById("benefitType").value;
+      alert(`Solicitud enviada:\nAsesor: ${name}\nBeneficio: ${benefit}`);
+      document.getElementById("benefitForm").style.display = "none";
+    });
+
+    // 🚀 Inicialización
+    async function init() {
+      const tickets = await fetchSheetData("Tickets_BD");
+      const chats = await fetchSheetData("Chats_BD");
+      const calls = await fetchSheetData("Calls_BD"); // Ajusta si la pestaña existe
+
+      const leaderboard = calculateScores(tickets, chats, calls);
+      renderLeaderboard(leaderboard);
+
+      // Poblar filtro de asesores
+      const filterSelect = document.getElementById("filterAdvisor");
+      leaderboard.forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a.name;
+        opt.textContent = a.name;
+        filterSelect.appendChild(opt);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
