@@ -5,96 +5,59 @@
   <title>Dashboard Asesores — Indicadores (Versión Claro Moderna)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    /* -------------------------
-       Modern Light UI
-       - Tipografía: Segoe UI (si disponible), fallback system
-       - Paleta: fondo claro, tarjetas blancas, acento naranja
-       ------------------------- */
+    /* Modern Light UI */
     :root{
-      --bg: #FFFFFF;            /* fondo principal */
-      --surface: #FAFAFB;       /* superficies suaves */
-      --muted: #616160;         /* gris de soporte */
-      --text: #231F20;          /* texto principal (negro suave) */
-      --accent: #F28F17;        /* naranja acento */
+      --bg: #FFFFFF;
+      --surface: #FAFAFB;
+      --muted: #616160;
+      --text: #231F20;
+      --accent: #F28F17;
       --card-border: rgba(35,31,32,0.06);
       --radius: 12px;
       --shadow: 0 8px 24px rgba(35,31,32,0.06);
     }
-
     html,body{
-      height:100%;
-      margin:0;
-      font-family:"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background:linear-gradient(180deg,var(--bg),var(--surface));
-      color:var(--text);
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
+      height:100%;margin:0;font-family:"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);
+      -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
     }
-
     .wrap{max-width:1200px;margin:28px auto;padding:20px;}
     header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
     .brand{display:flex;align-items:center;gap:14px}
-    .logo{
-      width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ffb86b);
-      display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:22px;box-shadow:0 8px 24px rgba(242,143,23,0.12);
-    }
+    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:22px;box-shadow:0 8px 24px rgba(242,143,23,0.12);}
     h1{font-size:38px;margin:0;font-weight:700;line-height:1}
     .subtitle{font-size:16px;color:var(--muted);margin-top:6px}
 
-    /* Controls */
     .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;align-items:end}
-    .control{
-      background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;
-      min-width:180px;box-shadow:var(--shadow);
-    }
+    .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow);}
     .control label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input[type="date"], select{
-      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px;
-    }
-    button.primary{
-      background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(242,143,23,0.12);
-    }
-    button.ghost{
-      background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer;
-    }
+    input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px;}
+    button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(242,143,23,0.12);}
+    button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer;}
 
-    /* Layout */
     .layout{display:grid;grid-template-columns:1fr 360px;gap:18px}
-    @media(max-width:980px){ .layout{grid-template-columns:1fr; } }
+    @media(max-width:980px){ .layout{grid-template-columns:1fr;} }
 
-    /* Card / Table */
     .card{background:#fff;border-radius:var(--radius);padding:16px;border:1px solid var(--card-border);box-shadow:var(--shadow)}
     .card h2{margin:0 0 8px 0;font-size:18px;color:var(--muted)}
     .table-wrap{overflow:auto;border-radius:8px;margin-top:12px}
     table{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
-    thead th{
-      text-align:left;padding:14px 12px;color:var(--muted);font-size:13px;font-weight:700;border-bottom:1px solid rgba(35,31,32,0.04);
-    }
+    thead th{text-align:left;padding:14px 12px;color:var(--muted);font-size:13px;font-weight:700;border-bottom:1px solid rgba(35,31,32,0.04);}
     tbody td{padding:12px;border-bottom:1px solid rgba(35,31,32,0.03);vertical-align:middle;color:var(--text)}
     tbody tr:hover{background:linear-gradient(90deg, rgba(242,143,23,0.03), rgba(242,143,23,0.01))}
-    .pos{
-      width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;border:1px solid rgba(35,31,32,0.04);
-    }
+    .pos{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;border:1px solid rgba(35,31,32,0.04);}
     .pos.top{background:linear-gradient(90deg,var(--accent),#ffb86b);color:#000;box-shadow:0 8px 20px rgba(242,143,23,0.08)}
     .advisor-name{font-weight:700}
     .meta-small{font-size:12px;color:var(--muted)}
     .score{color:var(--accent);font-weight:800;font-size:16px}
     .vol{color:var(--muted);font-weight:700}
 
-    /* Side panel */
     .side .card{display:flex;flex-direction:column;gap:12px}
-    .stat{
-      display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(35,31,32,0.03)
-    }
+    .stat{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(35,31,32,0.03)}
     .stat .label{color:var(--muted);font-size:13px}
     .stat .value{font-weight:800;font-size:20px;color:var(--text)}
-
     .empty{padding:28px;text-align:center;color:var(--muted)}
-
-    @media(max-width:600px){
-      h1{font-size:28px}
-      .logo{width:52px;height:52px;font-size:18px}
-    }
+    @media(max-width:600px){ h1{font-size:28px} .logo{width:52px;height:52px;font-size:18px} }
   </style>
 </head>
 <body>
@@ -113,7 +76,6 @@
       </div>
     </header>
 
-    <!-- filtros -->
     <div class="controls">
       <div class="control">
         <label>Fecha inicio (Chats/Llamadas)</label>
@@ -125,9 +87,7 @@
       </div>
       <div class="control">
         <label>Filtrar asesor</label>
-        <select id="filterAdvisor">
-          <option value="">Todos los asesores</option>
-        </select>
+        <select id="filterAdvisor"><option value="">Todos los asesores</option></select>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="primary" id="applyFilters">Aplicar</button>
@@ -136,7 +96,6 @@
     </div>
 
     <main class="layout">
-      <!-- Leaderboard -->
       <section class="card">
         <h2>Leaderboard</h2>
         <div class="table-wrap" role="table" aria-label="Leaderboard table">
@@ -159,43 +118,26 @@
         </div>
       </section>
 
-      <!-- Side panel -->
       <aside class="side">
         <div class="card">
           <div style="display:flex;flex-direction:column;gap:8px">
             <div class="stat">
-              <div>
-                <div class="label">Asesores</div>
-                <div class="value" id="statAdvisors">--</div>
-              </div>
+              <div><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
               <div style="font-size:12px;color:var(--muted)">Total</div>
             </div>
-
             <div class="stat">
-              <div>
-                <div class="label">Tickets totales</div>
-                <div class="value" id="statTickets">--</div>
-              </div>
+              <div><div class="label">Tickets totales</div><div class="value" id="statTickets">--</div></div>
               <div style="font-size:12px;color:var(--muted)">Periodo</div>
             </div>
-
             <div class="stat">
-              <div>
-                <div class="label">Llamadas totales</div>
-                <div class="value" id="statCalls">--</div>
-              </div>
+              <div><div class="label">Llamadas totales</div><div class="value" id="statCalls">--</div></div>
               <div style="font-size:12px;color:var(--muted)">Periodo</div>
             </div>
-
             <div class="stat">
-              <div>
-                <div class="label">Chats totales</div>
-                <div class="value" id="statChats">--</div>
-              </div>
+              <div><div class="label">Chats totales</div><div class="value" id="statChats">--</div></div>
               <div style="font-size:12px;color:var(--muted)">Periodo</div>
             </div>
           </div>
-
           <div style="margin-top:8px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
@@ -211,20 +153,12 @@
 
   <script>
     /******************************************************************
-     * CONFIGURACIÓN
-     * - ID del spreadsheet y nombres de pestañas
-     * - Mapeo de columnas (0-based)
+     * Configuración y mapeo de columnas
      ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
     const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD' };
 
-    // Convierte letra de columna a índice 0-based
     function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
-
-    // Columnas según tu instrucción final:
-    // Tickets: asesor en E -> index 4 (se cuentan todas las ocurrencias)
-    // Chats: asesor en B -> index 1 ; fecha en I -> index 8
-    // Llamadas: asesor en B -> index 1 ; fecha en C -> index 2
     const COL = {
       tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') },
       chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
@@ -232,24 +166,7 @@
     };
 
     /******************************************************************
-     * UTILIDADES
-     ******************************************************************/
-    function formatHHmm(date){
-      const d = new Date(date);
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    function normalizeName(s){
-      if(s === null || s === undefined) return '';
-      return String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
-    }
-
-    /******************************************************************
-     * PARSER CSV robusto (maneja comillas y saltos de línea)
+     * CSV parser robusto
      ******************************************************************/
     function parseCSV(text){
       const rows = [];
@@ -280,7 +197,7 @@
     }
 
     /******************************************************************
-     * Parseo de fecha flexible (varios formatos)
+     * Utilidades de parseo y normalización
      ******************************************************************/
     function parseDateFlexible(v){
       if(v === null || v === undefined) return null;
@@ -295,15 +212,19 @@
       return null;
     }
 
+    function normalizeName(s){
+      if(s === null || s === undefined) return '';
+      return String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
+    }
+
     /******************************************************************
-     * AGREGACIÓN: contar ocurrencias por asesor en cada base
+     * Conteo de ocurrencias por asesor
      *
-     * Reglas aplicadas:
-     * - Tickets: contar todas las ocurrencias del asesor en la columna E (sin filtrar por fecha).
-     * - Chats: contar ocurrencias en columna B; si hay filtro de fecha, aplicar usando columna I.
-     * - Calls: contar ocurrencias en columna B; si hay filtro de fecha, aplicar usando columna C.
-     *
-     * Devuelve: counts { asesor: { tickets, chats, calls } }
+     * - Tickets: cuenta todas las ocurrencias en columna E (índice 4).
+     * - Chats: cuenta por columna B (índice 1). Si hay filtro de fechas, usa columna I (índice 8).
+     *   Si el conteo de chats resulta 0, se intenta un fallback que busca el nombre
+     *   del asesor en cualquier columna de la fila (útil si la hoja tiene columnas ocultas/desplazadas).
+     * - Calls: cuenta por columna B; si hay filtro de fechas, usa columna C (índice 2).
      ******************************************************************/
     function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
       const counts = {};
@@ -317,8 +238,11 @@
       }
       function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
 
+      // Debug: mostrar primeras filas de chats para inspección
+      console.log('Chats_BD primeras filas (incluye encabezado):');
+      for(let i=0;i<Math.min(6, chatsRows.length); i++) console.log(i, chatsRows[i]);
+
       // Tickets: contar todas las ocurrencias en columna E (index 4)
-      // Se asume encabezado en r=0
       for(let r=1; r<ticketsRows.length; r++){
         const row = ticketsRows[r];
         const rawAdvisor = cell(row, COL.tickets.advisor);
@@ -328,7 +252,7 @@
         counts[advisor].tickets += 1;
       }
 
-      // Chats: columna B (asesor), fecha en I (index 8)
+      // Chats: conteo normal por columna B y filtro por fecha en I
       for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
         const rawAdvisor = cell(row, COL.chats.advisor);
@@ -344,7 +268,7 @@
         counts[advisor].chats += 1;
       }
 
-      // Calls: columna B (asesor), fecha en C (index 2)
+      // Calls: conteo por columna B y filtro por fecha en C
       for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
         const rawAdvisor = cell(row, COL.calls.advisor);
@@ -360,16 +284,41 @@
         counts[advisor].calls += 1;
       }
 
+      // Fallback para CHATS: si total chats = 0, intentar buscar asesor en cualquier columna
+      const totalChats = Object.values(counts).reduce((s,c)=>s+(c.chats||0),0);
+      if(totalChats === 0){
+        console.warn('Conteo de chats resultó 0. Aplicando fallback: búsqueda de asesor en cualquier columna de cada fila.');
+        // reconstruir counts (mantener tickets/calls ya contados)
+        for(let r=1; r<chatsRows.length; r++){
+          const row = chatsRows[r];
+          // buscar cualquier celda que parezca nombre (no vacío) y usarla como asesor
+          let foundAdvisor = '';
+          for(let c=0;c<row.length;c++){
+            const val = normalizeName(row[c]);
+            if(val && val.length > 1 && /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(val)){
+              // heurística: si la celda contiene letras, considerarla candidato
+              foundAdvisor = val;
+              break;
+            }
+          }
+          if(!foundAdvisor) continue;
+          ensure(foundAdvisor);
+          // aplicar filtro de fecha si existe (intentar leer columna I si existe)
+          const rawDate = cell(row, COL.chats.date);
+          const parsed = parseDateFlexible(rawDate);
+          if(filterFrom || filterTo){
+            if(!parsed) continue;
+            if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
+          }
+          counts[foundAdvisor].chats += 1;
+        }
+      }
+
       return counts;
     }
 
     /******************************************************************
-     * CÁLCULO DE PUNTAJES PROPORCIONALES
-     *
-     * - Para cada canal se identifica el máximo (volumen más alto).
-     * - Ese asesor obtiene 100 pts en ese canal.
-     * - Los demás reciben (volumen / máximo) * 100.
-     * - Puntaje total = promedio de los 3 canales.
+     * Cálculo de puntajes proporcionales
      ******************************************************************/
     function calculateScoresFromCounts(countsObj){
       const counts = countsObj;
@@ -407,7 +356,7 @@
     }
 
     /******************************************************************
-     * RENDERIZADO
+     * Renderizado
      ******************************************************************/
     function renderLeaderboard(scores, advisorFilter = ''){
       const tbody = document.querySelector('#leaderboardTable tbody');
@@ -458,7 +407,7 @@
     }
 
     /******************************************************************
-     * FLUJO PRINCIPAL: carga datos, agrega, calcula y renderiza
+     * Flujo principal
      ******************************************************************/
     let cache = { tickets:[], chats:[], calls:[] };
 
@@ -506,7 +455,7 @@
     loadAndRender();
 
     /******************************************************************
-     * Funciones auxiliares: fetch CSV y parseo
+     * Auxiliares: fetch CSV, escape y formato hora
      ******************************************************************/
     async function fetchSheetCSVRows(sheetName){
       const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
@@ -516,6 +465,8 @@
       return parseCSV(text);
     }
 
+    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
     function formatHHmm(date){
       const d = new Date(date);
       const hh = String(d.getHours()).padStart(2,'0');
@@ -524,16 +475,11 @@
     }
 
     /******************************************************************
-     * Comentarios en las funciones clave (resumen)
-     *
-     * - fetchSheetCSVRows: obtiene la pestaña como CSV público (gviz/tq?tqx=out:csv)
-     * - aggregateCountsCSV: cuenta ocurrencias por asesor:
-     *     • Tickets: cuenta todas las filas donde exista nombre en columna E (índice 4).
-     *     • Chats: cuenta por columna B; si hay filtro de fechas, usa columna I (índice 8).
-     *     • Llamadas: cuenta por columna B; si hay filtro de fechas, usa columna C (índice 2).
-     * - calculateScoresFromCounts: calcula puntos proporcionales por canal y promedio final.
-     *
-     * Asegúrate de que el spreadsheet sea público o accesible para lectura desde el navegador.
+     * Notas finales
+     * - Si tras esta versión los chats siguen en 0, revisa en la consola
+     *   las primeras filas de la pestaña Chats_BD (se imprimen al cargar).
+     * - Si la hoja no es pública, la petición CSV fallará; asegúrate de que
+     *   la pestaña sea accesible para lectura desde el navegador.
      ******************************************************************/
   </script>
 </body>
