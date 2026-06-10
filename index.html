@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Indicadores (Versión Claro Moderna)</title>
+  <title>Dashboard Asesores — Indicadores (Filtro Tickets por Fecha)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     /* Modern Light UI */
@@ -32,6 +32,9 @@
     .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow);}
     .control label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px;}
+    .inline {display:flex;gap:8px;align-items:center}
+    input[type="checkbox"]{width:16px;height:16px}
+
     button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(242,143,23,0.12);}
     button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer;}
 
@@ -67,7 +70,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Tickets · Llamadas · Chats — rendimiento proporcional</div>
+          <div class="subtitle">Tickets · Llamadas · Chats — filtros por fecha (ahora también Tickets)</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -76,19 +79,35 @@
       </div>
     </header>
 
-    <div class="controls">
+    <div class="controls" aria-label="Filtros">
       <div class="control">
-        <label>Fecha inicio (Chats/Llamadas)</label>
+        <label>Fecha inicio (Chats/Llamadas/Tickets)</label>
         <input type="date" id="dateFrom">
       </div>
       <div class="control">
-        <label>Fecha fin (Chats/Llamadas)</label>
+        <label>Fecha fin (Chats/Llamadas/Tickets)</label>
         <input type="date" id="dateTo">
       </div>
+
+      <div class="control">
+        <label>Opciones Tickets</label>
+        <div class="inline" style="margin-bottom:8px">
+          <input type="checkbox" id="filterTicketsByDate">
+          <label for="filterTicketsByDate" class="meta-small">Filtrar tickets por fecha (col H +1 día)</label>
+        </div>
+        <div class="inline">
+          <input type="checkbox" id="includeTicketsWithoutDate" checked>
+          <label for="includeTicketsWithoutDate" class="meta-small">Incluir tickets sin fecha cuando filtro activo</label>
+        </div>
+      </div>
+
       <div class="control">
         <label>Filtrar asesor</label>
-        <select id="filterAdvisor"><option value="">Todos los asesores</option></select>
+        <select id="filterAdvisor">
+          <option value="">Todos los asesores</option>
+        </select>
       </div>
+
       <div style="display:flex;gap:8px;align-items:center">
         <button class="primary" id="applyFilters">Aplicar</button>
         <button class="ghost" id="refreshBtn">Refrescar</button>
@@ -138,12 +157,13 @@
               <div style="font-size:12px;color:var(--muted)">Periodo</div>
             </div>
           </div>
+
           <div style="margin-top:8px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
-              • Tickets: se cuentan todas las ocurrencias en la columna E.<br>
-              • Chats: columna B; fecha en I para filtrar.<br>
-              • Llamadas: columna B; fecha en C para filtrar.
+              • Tickets: columna E (asesor), fecha en H (si existe).<br>
+              • Chats: columna B (asesor), fecha en I para filtrar.<br>
+              • Llamadas: columna B (asesor), fecha en C para filtrar.
             </div>
           </div>
         </div>
@@ -153,14 +173,14 @@
 
   <script>
     /******************************************************************
-     * Configuración y mapeo de columnas
+     * Configuración del Spreadsheet y mapeo de columnas
      ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
     const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD' };
 
     function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
     const COL = {
-      tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') },
+      tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') }, // H será usada para filtrar si se activa
       chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
       calls:  { advisor: letterToIndex('B'), date: letterToIndex('C') }
     };
@@ -197,7 +217,7 @@
     }
 
     /******************************************************************
-     * Utilidades de parseo y normalización
+     * Parseo de fecha flexible
      ******************************************************************/
     function parseDateFlexible(v){
       if(v === null || v === undefined) return null;
@@ -218,15 +238,17 @@
     }
 
     /******************************************************************
-     * Conteo de ocurrencias por asesor
+     * Agregación de conteos por asesor con soporte para filtro de tickets
      *
-     * - Tickets: cuenta todas las ocurrencias en columna E (índice 4).
-     * - Chats: cuenta por columna B (índice 1). Si hay filtro de fechas, usa columna I (índice 8).
-     *   Si el conteo de chats resulta 0, se intenta un fallback que busca el nombre
-     *   del asesor en cualquier columna de la fila (útil si la hoja tiene columnas ocultas/desplazadas).
-     * - Calls: cuenta por columna B; si hay filtro de fechas, usa columna C (índice 2).
+     * Reglas implementadas:
+     * - Tickets:
+     *   • Si checkbox "filterTicketsByDate" está desactivado -> contar todas las ocurrencias en E.
+     *   • Si está activado -> contar solo tickets cuya fecha en H exista y (fecha+1 día) esté dentro del rango,
+     *     y además (según checkbox "includeTicketsWithoutDate") decidir si incluir tickets sin fecha.
+     *   • La suma +1 día se aplica antes de comparar con el rango.
+     * - Chats y Calls: comportamiento igual que antes (filtrar por I y C si hay rango).
      ******************************************************************/
-    function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
+    function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, options){
       const counts = {};
       function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
       function inRangeDate(d, from, to){
@@ -238,21 +260,47 @@
       }
       function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
 
-      // Debug: mostrar primeras filas de chats para inspección
-      console.log('Chats_BD primeras filas (incluye encabezado):');
-      for(let i=0;i<Math.min(6, chatsRows.length); i++) console.log(i, chatsRows[i]);
-
-      // Tickets: contar todas las ocurrencias en columna E (index 4)
+      // Tickets
       for(let r=1; r<ticketsRows.length; r++){
         const row = ticketsRows[r];
         const rawAdvisor = cell(row, COL.tickets.advisor);
         const advisor = normalizeName(rawAdvisor);
         if(!advisor) continue;
-        ensure(advisor);
-        counts[advisor].tickets += 1;
+
+        // Si no se filtran tickets por fecha, contamos todas las ocurrencias en E
+        if(!options.filterTicketsByDate){
+          ensure(advisor);
+          counts[advisor].tickets += 1;
+          continue;
+        }
+
+        // Si filtramos tickets por fecha:
+        const rawDate = cell(row, COL.tickets.date);
+        const parsed = parseDateFlexible(rawDate);
+
+        if(parsed){
+          // Aplicar +1 día a la fecha del ticket antes de comparar
+          const d = new Date(parsed);
+          d.setDate(d.getDate() + 1);
+          if(inRangeDate(d, filterFrom, filterTo)){
+            ensure(advisor);
+            counts[advisor].tickets += 1;
+          } else {
+            // fuera de rango -> no contar
+          }
+        } else {
+          // No hay fecha en H
+          if(options.includeTicketsWithoutDate){
+            // incluir tickets sin fecha cuando el checkbox lo permite
+            ensure(advisor);
+            counts[advisor].tickets += 1;
+          } else {
+            // excluir tickets sin fecha
+          }
+        }
       }
 
-      // Chats: conteo normal por columna B y filtro por fecha en I
+      // Chats
       for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
         const rawAdvisor = cell(row, COL.chats.advisor);
@@ -261,14 +309,14 @@
         const rawDate = cell(row, COL.chats.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
-          if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
+          if(!parsed) continue;
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
         ensure(advisor);
         counts[advisor].chats += 1;
       }
 
-      // Calls: conteo por columna B y filtro por fecha en C
+      // Calls
       for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
         const rawAdvisor = cell(row, COL.calls.advisor);
@@ -282,36 +330,6 @@
         }
         ensure(advisor);
         counts[advisor].calls += 1;
-      }
-
-      // Fallback para CHATS: si total chats = 0, intentar buscar asesor en cualquier columna
-      const totalChats = Object.values(counts).reduce((s,c)=>s+(c.chats||0),0);
-      if(totalChats === 0){
-        console.warn('Conteo de chats resultó 0. Aplicando fallback: búsqueda de asesor en cualquier columna de cada fila.');
-        // reconstruir counts (mantener tickets/calls ya contados)
-        for(let r=1; r<chatsRows.length; r++){
-          const row = chatsRows[r];
-          // buscar cualquier celda que parezca nombre (no vacío) y usarla como asesor
-          let foundAdvisor = '';
-          for(let c=0;c<row.length;c++){
-            const val = normalizeName(row[c]);
-            if(val && val.length > 1 && /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(val)){
-              // heurística: si la celda contiene letras, considerarla candidato
-              foundAdvisor = val;
-              break;
-            }
-          }
-          if(!foundAdvisor) continue;
-          ensure(foundAdvisor);
-          // aplicar filtro de fecha si existe (intentar leer columna I si existe)
-          const rawDate = cell(row, COL.chats.date);
-          const parsed = parseDateFlexible(rawDate);
-          if(filterFrom || filterTo){
-            if(!parsed) continue;
-            if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
-          }
-          counts[foundAdvisor].chats += 1;
-        }
       }
 
       return counts;
@@ -437,7 +455,12 @@
       const fromDateOnly = fromDate ? new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()) : null;
       const toDateOnly   = toDate   ? new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()) : null;
 
-      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly);
+      const options = {
+        filterTicketsByDate: document.getElementById('filterTicketsByDate').checked,
+        includeTicketsWithoutDate: document.getElementById('includeTicketsWithoutDate').checked
+      };
+
+      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, options);
       const scores = calculateScoresFromCounts(counts);
 
       populateAdvisorFilter(scores);
@@ -475,11 +498,16 @@
     }
 
     /******************************************************************
-     * Notas finales
-     * - Si tras esta versión los chats siguen en 0, revisa en la consola
-     *   las primeras filas de la pestaña Chats_BD (se imprimen al cargar).
-     * - Si la hoja no es pública, la petición CSV fallará; asegúrate de que
-     *   la pestaña sea accesible para lectura desde el navegador.
+     * Comentarios finales
+     *
+     * - La suma de +1 día para tickets se aplica exactamente cuando el checkbox
+     *   "Filtrar tickets por fecha" está activo; la fecha usada es la de la columna H.
+     * - Si quieres que los tickets sin fecha se excluyan siempre, desmarca
+     *   "Incluir tickets sin fecha cuando filtro activo".
+     * - Si prefieres que tickets sin fecha se consideren con una fecha por defecto,
+     *   puedo añadir esa opción (ej. asignar fecha de creación o fecha actual).
+     * - Si los conteos siguen sin coincidir, revisa en la consola (F12 → Console)
+     *   las primeras filas de cada pestaña para confirmar posiciones de columnas.
      ******************************************************************/
   </script>
 </body>
