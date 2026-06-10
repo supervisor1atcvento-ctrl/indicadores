@@ -1,514 +1,480 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>Dashboard Asesores — Indicadores (Filtro Tickets por Fecha)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    /* Modern Light UI */
-    :root{
-      --bg: #FFFFFF;
-      --surface: #FAFAFB;
-      --muted: #616160;
-      --text: #231F20;
-      --accent: #F28F17;
-      --card-border: rgba(35,31,32,0.06);
-      --radius: 12px;
-      --shadow: 0 8px 24px rgba(35,31,32,0.06);
-    }
-    html,body{
-      height:100%;margin:0;font-family:"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);
-      -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-    }
-    .wrap{max-width:1200px;margin:28px auto;padding:20px;}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-    .brand{display:flex;align-items:center;gap:14px}
-    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:22px;box-shadow:0 8px 24px rgba(242,143,23,0.12);}
-    h1{font-size:38px;margin:0;font-weight:700;line-height:1}
-    .subtitle{font-size:16px;color:var(--muted);margin-top:6px}
-
-    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;align-items:end}
-    .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow);}
-    .control label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px;}
-    .inline {display:flex;gap:8px;align-items:center}
-    input[type="checkbox"]{width:16px;height:16px}
-
-    button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(242,143,23,0.12);}
-    button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer;}
-
-    .layout{display:grid;grid-template-columns:1fr 360px;gap:18px}
-    @media(max-width:980px){ .layout{grid-template-columns:1fr;} }
-
-    .card{background:#fff;border-radius:var(--radius);padding:16px;border:1px solid var(--card-border);box-shadow:var(--shadow)}
-    .card h2{margin:0 0 8px 0;font-size:18px;color:var(--muted)}
-    .table-wrap{overflow:auto;border-radius:8px;margin-top:12px}
-    table{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
-    thead th{text-align:left;padding:14px 12px;color:var(--muted);font-size:13px;font-weight:700;border-bottom:1px solid rgba(35,31,32,0.04);}
-    tbody td{padding:12px;border-bottom:1px solid rgba(35,31,32,0.03);vertical-align:middle;color:var(--text)}
-    tbody tr:hover{background:linear-gradient(90deg, rgba(242,143,23,0.03), rgba(242,143,23,0.01))}
-    .pos{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;border:1px solid rgba(35,31,32,0.04);}
-    .pos.top{background:linear-gradient(90deg,var(--accent),#ffb86b);color:#000;box-shadow:0 8px 20px rgba(242,143,23,0.08)}
-    .advisor-name{font-weight:700}
-    .meta-small{font-size:12px;color:var(--muted)}
-    .score{color:var(--accent);font-weight:800;font-size:16px}
-    .vol{color:var(--muted);font-weight:700}
-
-    .side .card{display:flex;flex-direction:column;gap:12px}
-    .stat{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(35,31,32,0.03)}
-    .stat .label{color:var(--muted);font-size:13px}
-    .stat .value{font-weight:800;font-size:20px;color:var(--text)}
-    .empty{padding:28px;text-align:center;color:var(--muted)}
-    @media(max-width:600px){ h1{font-size:28px} .logo{width:52px;height:52px;font-size:18px} }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard Productividad - Asesores</title>
+<style>
+  :root{
+    --bg:#000000;
+    --panel:#0b0b0b;
+    --muted:#bfbfbf;
+    --text:#ffffff;
+    --accent:#ff7a00;
+    --card-radius:10px;
+    --gap:12px;
+    font-family: Inter, Roboto, Arial, sans-serif;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);}
+  .wrap{max-width:1200px;margin:18px auto;padding:18px;}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  h1{font-size:20px;margin:0;font-weight:700}
+  .controls{display:flex;gap:12px;flex-wrap:wrap}
+  .control{background:var(--panel);padding:10px;border-radius:10px;display:flex;flex-direction:column;min-width:200px}
+  label{font-size:12px;color:var(--muted);margin-bottom:6px}
+  input[type="datetime-local"], select{background:transparent;border:1px solid #222;padding:8px;border-radius:6px;color:var(--text)}
+  button{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+  .layout{display:flex;gap:18px;margin-top:16px}
+  .left{flex:1}
+  .right{width:360px}
+  .card{background:linear-gradient(180deg,#0b0b0b,#0a0a0a);padding:16px;border-radius:var(--card-radius);box-shadow:0 6px 20px rgba(0,0,0,0.6)}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{padding:10px;text-align:left;border-bottom:1px solid #111;font-size:14px}
+  th{color:var(--muted);font-weight:600}
+  .score{font-weight:800;color:var(--accent);font-size:16px}
+  .small-muted{color:var(--muted);font-size:13px}
+  .individual-panel{display:none}
+  .metric{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed #111}
+  .metric .value{font-weight:800;color:var(--accent);font-size:20px}
+  .position-badge{background:var(--accent);color:#000;padding:6px 10px;border-radius:999px;font-weight:800}
+  .no-data{display:none;margin-top:12px;padding:12px;border-radius:8px;background:#120000;color:var(--muted)}
+  @media(max-width:900px){.layout{flex-direction:column}.right{width:100%}}
+  /* small helpers */
+  .muted{color:var(--muted)}
+  .top-row{display:flex;justify-content:space-between;align-items:center}
+  .link-like{color:var(--accent);cursor:pointer;text-decoration:underline}
+</style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="brand">
-        <div class="logo">AS</div>
-        <div>
-          <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Tickets · Llamadas · Chats — filtros por fecha (ahora también Tickets)</div>
-        </div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:13px;color:var(--muted)">Última sincronización</div>
-        <div id="lastSync" style="font-weight:700;color:var(--text);margin-top:6px">--:--</div>
-      </div>
+      <h1>Dashboard Productividad - Asesores</h1>
+      <div class="small-muted">Paleta: Negro · Blanco · Naranja</div>
     </header>
 
-    <div class="controls" aria-label="Filtros">
+    <div class="controls">
       <div class="control">
-        <label>Fecha inicio (Chats/Llamadas/Tickets)</label>
-        <input type="date" id="dateFrom">
-      </div>
-      <div class="control">
-        <label>Fecha fin (Chats/Llamadas/Tickets)</label>
-        <input type="date" id="dateTo">
+        <label>Fecha Inicio (24h) — Formato estricto</label>
+        <input id="startDate" type="datetime-local" />
+        <div class="small-muted" style="margin-top:6px;font-size:12px">Se enviará como YYYY-MM-DD HH:mm</div>
       </div>
 
       <div class="control">
-        <label>Opciones Tickets</label>
-        <div class="inline" style="margin-bottom:8px">
-          <input type="checkbox" id="filterTicketsByDate">
-          <label for="filterTicketsByDate" class="meta-small">Filtrar tickets por fecha (col H +1 día)</label>
-        </div>
-        <div class="inline">
-          <input type="checkbox" id="includeTicketsWithoutDate" checked>
-          <label for="includeTicketsWithoutDate" class="meta-small">Incluir tickets sin fecha cuando filtro activo</label>
-        </div>
+        <label>Fecha Fin (24h) — Formato estricto</label>
+        <input id="endDate" type="datetime-local" />
       </div>
 
       <div class="control">
-        <label>Filtrar asesor</label>
-        <select id="filterAdvisor">
-          <option value="">Todos los asesores</option>
-        </select>
+        <label>Asesor</label>
+        <select id="advisorSelect"><option>Cargando...</option></select>
       </div>
 
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="primary" id="applyFilters">Aplicar</button>
-        <button class="ghost" id="refreshBtn">Refrescar</button>
+      <div style="display:flex;align-items:center">
+        <button id="applyBtn">Aplicar filtros</button>
       </div>
     </div>
 
-    <main class="layout">
-      <section class="card">
-        <h2>Leaderboard</h2>
-        <div class="table-wrap" role="table" aria-label="Leaderboard table">
-          <table id="leaderboardTable" role="grid">
+    <div style="height:14px"></div>
+
+    <div class="layout">
+      <div class="left">
+        <div id="rankingCard" class="card">
+          <div class="top-row">
+            <div>
+              <div class="small-muted">Ranking General</div>
+              <div style="font-size:18px;font-weight:700">Asesores ordenados por puntaje</div>
+            </div>
+            <div class="small-muted" id="rangeLabel"></div>
+          </div>
+
+          <table id="rankingTable" aria-live="polite">
             <thead>
               <tr>
-                <th>Pos</th>
+                <th>#</th>
                 <th>Asesor</th>
-                <th>Tickets<br><span class="meta-small">Vol / Pts</span></th>
-                <th>Llamadas<br><span class="meta-small">Vol / Pts</span></th>
-                <th>Chats<br><span class="meta-small">Vol / Pts</span></th>
-                <th>Puntaje Total</th>
+                <th class="small-muted">Tickets</th>
+                <th class="small-muted">Chats</th>
+                <th class="small-muted">Llamadas</th>
+                <th>Puntaje</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-        <div style="margin-top:12px;color:var(--muted);font-size:13px">
-          Regla: cada canal otorga 100 pts al máximo; resto proporcional; puntaje final = promedio de los 3 canales.
-        </div>
-      </section>
 
-      <aside class="side">
-        <div class="card">
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="stat">
-              <div><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Total</div>
+        <div id="noData" class="no-data">No hay datos para el rango seleccionado o el formato de fecha es inválido.</div>
+      </div>
+
+      <div class="right">
+        <div id="individualPanel" class="card individual-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div>
+              <div class="small-muted">Dashboard Individual</div>
+              <div id="indName" style="font-size:18px;font-weight:700"></div>
             </div>
-            <div class="stat">
-              <div><div class="label">Tickets totales</div><div class="value" id="statTickets">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Periodo</div>
-            </div>
-            <div class="stat">
-              <div><div class="label">Llamadas totales</div><div class="value" id="statCalls">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Periodo</div>
-            </div>
-            <div class="stat">
-              <div><div class="label">Chats totales</div><div class="value" id="statChats">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Periodo</div>
-            </div>
+            <div id="indPosition" class="position-badge">#1</div>
           </div>
 
-          <div style="margin-top:8px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
-            <div style="font-size:13px;color:var(--muted)">Notas</div>
-            <div style="font-size:13px;color:var(--muted);margin-top:6px">
-              • Tickets: columna E (asesor), fecha en H (si existe).<br>
-              • Chats: columna B (asesor), fecha en I para filtrar.<br>
-              • Llamadas: columna B (asesor), fecha en C para filtrar.
-            </div>
+          <div class="metric">
+            <div class="small-muted">Tickets</div>
+            <div class="value" id="indTickets">0</div>
           </div>
+          <div class="metric">
+            <div class="small-muted">Chats</div>
+            <div class="value" id="indChats">0</div>
+          </div>
+          <div class="metric">
+            <div class="small-muted">Llamadas</div>
+            <div class="value" id="indCalls">0</div>
+          </div>
+
+          <div style="height:12px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="small-muted">Puntaje Final</div>
+            <div class="score" id="indScore">0</div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="small-muted" id="indNote">Comparado con el ranking global.</div>
         </div>
-      </aside>
-    </main>
+      </div>
+    </div>
   </div>
 
-  <script>
-    /******************************************************************
-     * Configuración del Spreadsheet y mapeo de columnas
-     ******************************************************************/
-    const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
-    const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD' };
+<script>
+/*
+  Single-file Dashboard que lee directamente desde Google Sheets público.
+  Requisitos del usuario:
+  - URL del spreadsheet (id extraído de la URL)
+  - Nombres de pestañas: Tickets_BD, Chats_BD, Llamadas_BD
+  - Mapeo de columnas:
+      Tickets_BD: advisor Col E (5), date Col H (8)
+      Chats_BD:   advisor Col B (2), date Col I (9)
+      Llamadas_BD:advisor Col B (2), date Col C (3)
+  - Fecha estricta: "YYYY-MM-DD HH:mm"
+  - Cálculo de puntaje: porcentajes relativos al primer lugar por rubro, sumar y multiplicar por 100
+*/
 
-    function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
-    const COL = {
-      tickets: { advisor: letterToIndex('E'), date: letterToIndex('H') }, // H será usada para filtrar si se activa
-      chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
-      calls:  { advisor: letterToIndex('B'), date: letterToIndex('C') }
+/* ---------- CONFIGURACIÓN ---------- */
+// Pega aquí la URL del Google Sheet (la que proporcionaste)
+const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA/edit?usp=sharing';
+
+// Nombres de pestañas (exactos)
+const SHEET_TICKETS = 'Tickets_BD';
+const SHEET_CHATS   = 'Chats_BD';
+const SHEET_CALLS   = 'Llamadas_BD';
+
+// Mapeo de columnas (1-based)
+const MAP = {
+  tickets: { sheet: SHEET_TICKETS, advisorCol: 5, dateCol: 8 },
+  chats:   { sheet: SHEET_CHATS,   advisorCol: 2, dateCol: 9 },
+  calls:   { sheet: SHEET_CALLS,   advisorCol: 2, dateCol: 3 }
+};
+
+// Regex estricto para fecha "YYYY-MM-DD HH:mm"
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+
+/* ---------- UTILIDADES ---------- */
+function extractSpreadsheetId(url){
+  // extrae el id entre /d/ and /
+  const m = url.match(/\/d\/([a-zA-Z0-9-_]+)(\/|$)/);
+  return m ? m[1] : null;
+}
+function toStrictFormatFromLocal(dtLocal){
+  if (!dtLocal) return '';
+  return dtLocal.replace('T',' ');
+}
+function parseDateStrict(str){
+  if (!str || typeof str !== 'string') return null;
+  str = str.trim();
+  if (!DATE_REGEX.test(str)) return null;
+  const [datePart, timePart] = str.split(' ');
+  const [y,m,d] = datePart.split('-').map(Number);
+  const [hh,mm] = timePart.split(':').map(Number);
+  const dt = new Date(y, m-1, d, hh, mm, 0, 0);
+  if (dt.getFullYear() !== y || dt.getMonth() !== (m-1) || dt.getDate() !== d ||
+      dt.getHours() !== hh || dt.getMinutes() !== mm) return null;
+  return dt;
+}
+function pad(n){return n<10?'0'+n:n}
+
+/* ---------- FETCH desde Google Sheets público usando endpoint gviz ---------- */
+/*
+  Endpoint: https://docs.google.com/spreadsheets/d/{id}/gviz/tq?tqx=out:json&sheet={sheetName}
+  Retorna JSONP con prefijo "/*O_o*\/\n" y objeto JSON. Se parsea para obtener rows.
+*/
+async function fetchSheetRows(spreadsheetId, sheetName){
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url, {cache: 'no-store'});
+  if (!res.ok) throw new Error('No se pudo acceder a la hoja. Verifica que sea pública.');
+  const text = await res.text();
+  // El contenido viene como: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+  const jsonText = text.replace(/^[^\(]*\(/, '').replace(/\);?[\s\S]*$/,'');
+  const obj = JSON.parse(jsonText);
+  // obj.table.rows es un array de filas; cada fila tiene c: [{v:...}, ...]
+  return obj.table.rows || [];
+}
+
+/* Leer y mapear filas a {advisor, date} usando índices 1-based */
+function mapRowsToRecords(rows, advisorCol, dateCol){
+  const out = [];
+  rows.forEach(r => {
+    // r.c puede ser null entries
+    const c = r.c || [];
+    const advisorCell = c[advisorCol - 1];
+    const dateCell    = c[dateCol - 1];
+    const advisor = advisorCell && advisorCell.v !== null ? String(advisorCell.v).trim() : '';
+    // Para la fecha, preferimos el valor textual si existe (v), si es objeto Date en gviz puede venir como Date(...) o string
+    let dateRaw = dateCell && dateCell.v !== null ? String(dateCell.v).trim() : '';
+    // Si gviz devuelve fechas como seriales o en otro formato, intentamos normalizar:
+    // Si dateCell.f existe, usarla (formateada por Sheets)
+    if ((!dateRaw || dateRaw === 'null') && dateCell && dateCell.f) dateRaw = String(dateCell.f).trim();
+    if (!advisor || !dateRaw) return;
+    // Aceptamos sólo fechas en formato "YYYY-MM-DD HH:mm" estrictas
+    if (!DATE_REGEX.test(dateRaw)) return;
+    const parsed = parseDateStrict(dateRaw);
+    if (!parsed) return;
+    out.push({ advisor, date: parsed, rawDate: dateRaw });
+  });
+  return out;
+}
+
+/* ---------- Lógica de agregación y cálculo de puntaje ---------- */
+function aggregateAndScore(recordsTickets, recordsChats, recordsCalls, startDate, endDate){
+  const counts = {}; // advisor -> {tickets,chats,llamadas}
+  function ensure(a){ if(!counts[a]) counts[a] = {tickets:0,chats:0,llamadas:0}; }
+
+  recordsTickets.forEach(r => {
+    if (r.date >= startDate && r.date <= endDate) { ensure(r.advisor); counts[r.advisor].tickets++; }
+  });
+  recordsChats.forEach(r => {
+    if (r.date >= startDate && r.date <= endDate) { ensure(r.advisor); counts[r.advisor].chats++; }
+  });
+  recordsCalls.forEach(r => {
+    if (r.date >= startDate && r.date <= endDate) { ensure(r.advisor); counts[r.advisor].llamadas++; }
+  });
+
+  // Si no hay asesores, devolver vacío
+  const advisors = Object.keys(counts);
+  if (advisors.length === 0) return { ranking: [], totals: {maxTickets:0,maxChats:0,maxLlamadas:0} };
+
+  let maxTickets = 0, maxChats = 0, maxLlamadas = 0;
+  advisors.forEach(a => {
+    const c = counts[a];
+    if (c.tickets > maxTickets) maxTickets = c.tickets;
+    if (c.chats > maxChats) maxChats = c.chats;
+    if (c.llamadas > maxLlamadas) maxLlamadas = c.llamadas;
+  });
+
+  const arr = advisors.map(a => {
+    const c = counts[a];
+    const pctTickets = maxTickets === 0 ? 0 : (c.tickets / maxTickets);
+    const pctChats   = maxChats === 0 ? 0 : (c.chats / maxChats);
+    const pctLlamadas= maxLlamadas === 0 ? 0 : (c.llamadas / maxLlamadas);
+    const score = Math.round((pctTickets + pctChats + pctLlamadas) * 100); // 0..300
+    return {
+      advisor: a,
+      tickets: c.tickets,
+      chats: c.chats,
+      llamadas: c.llamadas,
+      pctTickets: Number(pctTickets.toFixed(4)),
+      pctChats: Number(pctChats.toFixed(4)),
+      pctLlamadas: Number(pctLlamadas.toFixed(4)),
+      score
     };
+  });
 
-    /******************************************************************
-     * CSV parser robusto
-     ******************************************************************/
-    function parseCSV(text){
-      const rows = [];
-      let cur = '', row = [], inQuotes = false;
-      for(let i=0;i<text.length;i++){
-        const ch = text[i], next = text[i+1];
-        if(ch === '"'){
-          if(inQuotes && next === '"'){ cur += '"'; i++; continue; }
-          inQuotes = !inQuotes; continue;
-        }
-        if(ch === ',' && !inQuotes){ row.push(cur); cur=''; continue; }
-        if((ch === '\n' || ch === '\r') && !inQuotes){
-          if(ch === '\r' && next === '\n'){ i++; }
-          row.push(cur); rows.push(row); row=[]; cur=''; continue;
-        }
-        cur += ch;
-      }
-      if(cur !== '' || row.length) { row.push(cur); rows.push(row); }
-      return rows;
+  arr.sort((x,y) => y.score - x.score || (y.tickets + y.chats + y.llamadas) - (x.tickets + x.chats + x.llamadas));
+  arr.forEach((r,i)=> r.position = i+1);
+
+  return { ranking: arr, totals: { maxTickets, maxChats, maxLlamadas } };
+}
+
+/* ---------- UI render ---------- */
+function setRangeLabel(startStr, endStr){
+  document.getElementById('rangeLabel').textContent = startStr && endStr ? `${startStr} → ${endStr}` : '';
+}
+function renderRankingTable(ranking){
+  const tbody = document.querySelector('#rankingTable tbody');
+  tbody.innerHTML = '';
+  if (!ranking || ranking.length === 0){
+    document.getElementById('rankingCard').style.display = 'none';
+    document.getElementById('noData').style.display = 'block';
+    return;
+  }
+  document.getElementById('rankingCard').style.display = 'block';
+  document.getElementById('noData').style.display = 'none';
+  ranking.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.position}</td>
+      <td><span class="link-like" data-advisor="${escapeHtml(row.advisor)}">${escapeHtml(row.advisor)}</span></td>
+      <td class="small-muted">${row.tickets}</td>
+      <td class="small-muted">${row.chats}</td>
+      <td class="small-muted">${row.llamadas}</td>
+      <td><span class="score">${row.score}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  // click en nombre para ver individual
+  tbody.querySelectorAll('.link-like').forEach(el=>{
+    el.addEventListener('click', (ev)=>{
+      const name = ev.target.getAttribute('data-advisor');
+      document.getElementById('advisorSelect').value = name;
+      showIndividualPanel(name, ranking);
+    });
+  });
+}
+function showIndividualPanel(advisorName, ranking){
+  const panel = document.getElementById('individualPanel');
+  const ind = ranking.find(r=>r.advisor === advisorName);
+  if (!ind) { panel.style.display = 'none'; return; }
+  document.getElementById('indName').textContent = ind.advisor;
+  document.getElementById('indTickets').textContent = ind.tickets;
+  document.getElementById('indChats').textContent = ind.chats;
+  document.getElementById('indCalls').textContent = ind.llamadas;
+  document.getElementById('indScore').textContent = ind.score;
+  document.getElementById('indPosition').textContent = `#${ind.position}`;
+  panel.style.display = 'block';
+  document.getElementById('rankingCard').style.display = 'none';
+}
+
+/* ---------- Seguridad y mensajes ---------- */
+function showError(msg){
+  alert(msg);
+}
+
+/* ---------- Escape HTML helper ---------- */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
+}
+
+/* ---------- Flujo principal: cargar asesores y aplicar filtros ---------- */
+async function loadAdvisorsAndInit(){
+  try {
+    const id = extractSpreadsheetId(SPREADSHEET_URL);
+    if (!id) throw new Error('ID del spreadsheet no encontrado en la URL. Verifica la URL.');
+    // Cargar las 3 hojas en paralelo
+    const [rowsTickets, rowsChats, rowsCalls] = await Promise.all([
+      fetchSheetRows(id, MAP.tickets.sheet).catch(e=>{ console.warn('tickets fetch err',e); return []; }),
+      fetchSheetRows(id, MAP.chats.sheet).catch(e=>{ console.warn('chats fetch err',e); return []; }),
+      fetchSheetRows(id, MAP.calls.sheet).catch(e=>{ console.warn('calls fetch err',e); return []; })
+    ]);
+    // Mapear a registros (sin filtrar por fecha aún)
+    const recTickets = mapRowsToRecords(rowsTickets, MAP.tickets.advisorCol, MAP.tickets.dateCol);
+    const recChats   = mapRowsToRecords(rowsChats, MAP.chats.advisorCol, MAP.chats.dateCol);
+    const recCalls   = mapRowsToRecords(rowsCalls, MAP.calls.advisorCol, MAP.calls.dateCol);
+
+    // Construir lista única de asesores
+    const set = new Set();
+    recTickets.forEach(r=>set.add(r.advisor));
+    recChats.forEach(r=>set.add(r.advisor));
+    recCalls.forEach(r=>set.add(r.advisor));
+    const advisors = Array.from(set).sort((a,b)=>a.localeCompare(b,'es'));
+    const sel = document.getElementById('advisorSelect');
+    sel.innerHTML = '';
+    const optAll = document.createElement('option'); optAll.value = 'Todos'; optAll.textContent = 'Todos';
+    sel.appendChild(optAll);
+    advisors.forEach(a=>{
+      const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o);
+    });
+
+    // Guardar registros en memoria local para reuso (evita re-fetch en cada apply)
+    window.__DS_DATA = { recTickets, recChats, recCalls };
+
+    // Prellenar fechas por defecto (últimos 7 días)
+    const now = new Date();
+    const end = new Date(now);
+    const start = new Date(now); start.setDate(start.getDate() - 7);
+    function toLocalInput(d){
+      const yyyy = d.getFullYear();
+      const mm = pad(d.getMonth()+1);
+      const dd = pad(d.getDate());
+      const hh = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    }
+    document.getElementById('startDate').value = toLocalInput(start);
+    document.getElementById('endDate').value = toLocalInput(end);
+
+    // Aplicar filtros inicial
+    applyFilters();
+  } catch (err) {
+    showError('Error inicial: ' + (err.message || err));
+  }
+}
+
+async function applyFilters(){
+  try {
+    const startInput = document.getElementById('startDate').value;
+    const endInput   = document.getElementById('endDate').value;
+    const advisorSel = document.getElementById('advisorSelect').value;
+
+    if (!startInput || !endInput) { showError('Seleccione Fecha Inicio y Fecha Fin en formato 24 horas.'); return; }
+    const startStr = toStrictFormatFromLocal(startInput);
+    const endStr   = toStrictFormatFromLocal(endInput);
+
+    // Validar formato estricto
+    if (!DATE_REGEX.test(startStr) || !DATE_REGEX.test(endStr)) {
+      showError('Formato de fecha inválido. Use YYYY-MM-DD HH:mm (24 horas).');
+      return;
+    }
+    const startDate = parseDateStrict(startStr);
+    const endDate   = parseDateStrict(endStr);
+    if (!startDate || !endDate) { showError('Formato de fecha inválido.'); return; }
+    if (startDate > endDate) { showError('Fecha inicio debe ser anterior o igual a fecha fin.'); return; }
+
+    setRangeLabel(startStr, endStr);
+
+    // Usar datos en memoria si existen, sino recargar
+    let recTickets = window.__DS_DATA && window.__DS_DATA.recTickets;
+    let recChats   = window.__DS_DATA && window.__DS_DATA.recChats;
+    let recCalls   = window.__DS_DATA && window.__DS_DATA.recCalls;
+
+    if (!recTickets || !recChats || !recCalls) {
+      // recargar (si el usuario borró la memoria)
+      const id = extractSpreadsheetId(SPREADSHEET_URL);
+      [recTickets, recChats, recCalls] = await Promise.all([
+        fetchSheetRows(id, MAP.tickets.sheet).then(rows=>mapRowsToRecords(rows, MAP.tickets.advisorCol, MAP.tickets.dateCol)),
+        fetchSheetRows(id, MAP.chats.sheet).then(rows=>mapRowsToRecords(rows, MAP.chats.advisorCol, MAP.chats.dateCol)),
+        fetchSheetRows(id, MAP.calls.sheet).then(rows=>mapRowsToRecords(rows, MAP.calls.advisorCol, MAP.calls.dateCol))
+      ]);
+      window.__DS_DATA = { recTickets, recChats, recCalls };
     }
 
-    async function fetchSheetCSVRows(sheetName){
-      const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')');
-      const text = await res.text();
-      return parseCSV(text);
-    }
+    // Filtrado y agregación
+    const result = aggregateAndScore(recTickets, recChats, recCalls, startDate, endDate);
 
-    /******************************************************************
-     * Parseo de fecha flexible
-     ******************************************************************/
-    function parseDateFlexible(v){
-      if(v === null || v === undefined) return null;
-      const s = String(v).trim();
-      if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
-      const d1 = new Date(s);
-      if(!isNaN(d1.getTime())) return d1;
-      const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-      if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
-      const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-      if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
-      return null;
-    }
-
-    function normalizeName(s){
-      if(s === null || s === undefined) return '';
-      return String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
-    }
-
-    /******************************************************************
-     * Agregación de conteos por asesor con soporte para filtro de tickets
-     *
-     * Reglas implementadas:
-     * - Tickets:
-     *   • Si checkbox "filterTicketsByDate" está desactivado -> contar todas las ocurrencias en E.
-     *   • Si está activado -> contar solo tickets cuya fecha en H exista y (fecha+1 día) esté dentro del rango,
-     *     y además (según checkbox "includeTicketsWithoutDate") decidir si incluir tickets sin fecha.
-     *   • La suma +1 día se aplica antes de comparar con el rango.
-     * - Chats y Calls: comportamiento igual que antes (filtrar por I y C si hay rango).
-     ******************************************************************/
-    function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, options){
-      const counts = {};
-      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
-      function inRangeDate(d, from, to){
-        if(!d) return false;
-        const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        if(from && dd < from) return false;
-        if(to && dd > to) return false;
-        return true;
-      }
-      function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
-
-      // Tickets
-      for(let r=1; r<ticketsRows.length; r++){
-        const row = ticketsRows[r];
-        const rawAdvisor = cell(row, COL.tickets.advisor);
-        const advisor = normalizeName(rawAdvisor);
-        if(!advisor) continue;
-
-        // Si no se filtran tickets por fecha, contamos todas las ocurrencias en E
-        if(!options.filterTicketsByDate){
-          ensure(advisor);
-          counts[advisor].tickets += 1;
-          continue;
-        }
-
-        // Si filtramos tickets por fecha:
-        const rawDate = cell(row, COL.tickets.date);
-        const parsed = parseDateFlexible(rawDate);
-
-        if(parsed){
-          // Aplicar +1 día a la fecha del ticket antes de comparar
-          const d = new Date(parsed);
-          d.setDate(d.getDate() + 1);
-          if(inRangeDate(d, filterFrom, filterTo)){
-            ensure(advisor);
-            counts[advisor].tickets += 1;
-          } else {
-            // fuera de rango -> no contar
-          }
-        } else {
-          // No hay fecha en H
-          if(options.includeTicketsWithoutDate){
-            // incluir tickets sin fecha cuando el checkbox lo permite
-            ensure(advisor);
-            counts[advisor].tickets += 1;
-          } else {
-            // excluir tickets sin fecha
-          }
-        }
-      }
-
-      // Chats
-      for(let r=1; r<chatsRows.length; r++){
-        const row = chatsRows[r];
-        const rawAdvisor = cell(row, COL.chats.advisor);
-        const advisor = normalizeName(rawAdvisor);
-        if(!advisor) continue;
-        const rawDate = cell(row, COL.chats.date);
-        const parsed = parseDateFlexible(rawDate);
-        if(filterFrom || filterTo){
-          if(!parsed) continue;
-          if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
-        }
-        ensure(advisor);
-        counts[advisor].chats += 1;
-      }
-
-      // Calls
-      for(let r=1; r<callsRows.length; r++){
-        const row = callsRows[r];
-        const rawAdvisor = cell(row, COL.calls.advisor);
-        const advisor = normalizeName(rawAdvisor);
-        if(!advisor) continue;
-        const rawDate = cell(row, COL.calls.date);
-        const parsed = parseDateFlexible(rawDate);
-        if(filterFrom || filterTo){
-          if(!parsed) continue;
-          if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
-        }
-        ensure(advisor);
-        counts[advisor].calls += 1;
-      }
-
-      return counts;
-    }
-
-    /******************************************************************
-     * Cálculo de puntajes proporcionales
-     ******************************************************************/
-    function calculateScoresFromCounts(countsObj){
-      const counts = countsObj;
-      const advisors = Object.keys(counts);
-      if(advisors.length === 0) return [];
-
-      let maxTickets = 0, maxCalls = 0, maxChats = 0;
-      advisors.forEach(name => {
-        const c = counts[name];
-        if(c.tickets > maxTickets) maxTickets = c.tickets;
-        if(c.calls > maxCalls) maxCalls = c.calls;
-        if(c.chats > maxChats) maxChats = c.chats;
-      });
-
-      const arr = advisors.map(name => {
-        const c = counts[name];
-        const ticketPts = maxTickets ? (c.tickets / maxTickets) * 100 : 0;
-        const callPts   = maxCalls   ? (c.calls   / maxCalls)   * 100 : 0;
-        const chatPts   = maxChats   ? (c.chats   / maxChats)   * 100 : 0;
-        const total = (ticketPts + callPts + chatPts) / 3;
-        return {
-          name,
-          tickets: c.tickets,
-          ticketPts: Number(ticketPts.toFixed(2)),
-          calls: c.calls,
-          callPts: Number(callPts.toFixed(2)),
-          chats: c.chats,
-          chatPts: Number(chatPts.toFixed(2)),
-          total: Number(total.toFixed(2))
-        };
-      });
-
-      arr.sort((a,b) => b.total - a.total);
-      return arr;
-    }
-
-    /******************************************************************
-     * Renderizado
-     ******************************************************************/
-    function renderLeaderboard(scores, advisorFilter = ''){
-      const tbody = document.querySelector('#leaderboardTable tbody');
-      tbody.innerHTML = '';
-      if(scores.length === 0){
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay datos para mostrar</td></tr>';
+    // Si seleccionó un asesor individual, mostrar panel individual
+    if (advisorSel && advisorSel !== 'Todos') {
+      // Si el asesor no está en ranking, mostrar mensaje
+      const found = result.ranking.find(r=>r.advisor === advisorSel);
+      if (!found) {
+        document.getElementById('rankingCard').style.display = 'none';
+        document.getElementById('noData').style.display = 'block';
+        document.getElementById('individualPanel').style.display = 'none';
         return;
       }
-      scores.forEach((row, idx) => {
-        if(advisorFilter && row.name !== advisorFilter) return;
-        const tr = document.createElement('tr');
-        const posClass = idx === 0 ? 'pos top' : 'pos';
-        tr.innerHTML = `
-          <td><div class="${posClass}">${idx+1}</div></td>
-          <td>
-            <div class="advisor-name">${escapeHtml(row.name)}</div>
-            <div class="meta-small">Asesor</div>
-          </td>
-          <td><div class="vol">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
-          <td><div class="vol">${row.calls}</div><div class="meta-small">${row.callPts} pts</div></td>
-          <td><div class="vol">${row.chats}</div><div class="meta-small">${row.chatPts} pts</div></td>
-          <td class="score">${row.total}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+      showIndividualPanel(advisorSel, result.ranking);
+    } else {
+      // Mostrar tabla general
+      document.getElementById('individualPanel').style.display = 'none';
+      renderRankingTable(result.ranking);
     }
 
-    function populateAdvisorFilter(scores){
-      const sel = document.getElementById('filterAdvisor');
-      sel.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
-      scores.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.name;
-        opt.textContent = s.name;
-        sel.appendChild(opt);
-      });
-    }
+  } catch (err) {
+    showError('Error al aplicar filtros: ' + (err.message || err));
+  }
+}
 
-    function updateSideStats(counts){
-      const advisors = Object.keys(counts).length;
-      const totalTickets = Object.values(counts).reduce((s,c)=>s+(c.tickets||0),0);
-      const totalCalls = Object.values(counts).reduce((s,c)=>s+(c.calls||0),0);
-      const totalChats = Object.values(counts).reduce((s,c)=>s+(c.chats||0),0);
-      document.getElementById('statAdvisors').textContent = advisors;
-      document.getElementById('statTickets').textContent = totalTickets;
-      document.getElementById('statCalls').textContent = totalCalls;
-      document.getElementById('statChats').textContent = totalChats;
-    }
+/* ---------- Inicialización ---------- */
+document.getElementById('applyBtn').addEventListener('click', applyFilters);
+document.getElementById('advisorSelect').addEventListener('change', function(){
+  // Reaplicar filtros para alternar entre "Todos" y un asesor individual
+  applyFilters();
+});
 
-    /******************************************************************
-     * Flujo principal
-     ******************************************************************/
-    let cache = { tickets:[], chats:[], calls:[] };
-
-    async function loadAndRender(){
-      try{
-        document.getElementById('lastSync').textContent = formatHHmm(new Date());
-        const [ticketsRows, chatsRows, callsRows] = await Promise.all([
-          fetchSheetCSVRows(SHEETS.tickets),
-          fetchSheetCSVRows(SHEETS.chats),
-          fetchSheetCSVRows(SHEETS.calls)
-        ]);
-        cache.tickets = ticketsRows;
-        cache.chats = chatsRows;
-        cache.calls = callsRows;
-        applyFiltersAndRender();
-      } catch(err){
-        console.error(err);
-        alert('Error al cargar datos: ' + err.message + '. Revisa permisos de la hoja o la consola.');
-      }
-    }
-
-    function applyFiltersAndRender(){
-      const fromVal = document.getElementById('dateFrom').value;
-      const toVal   = document.getElementById('dateTo').value;
-      const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
-      const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
-      const fromDateOnly = fromDate ? new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()) : null;
-      const toDateOnly   = toDate   ? new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()) : null;
-
-      const options = {
-        filterTicketsByDate: document.getElementById('filterTicketsByDate').checked,
-        includeTicketsWithoutDate: document.getElementById('includeTicketsWithoutDate').checked
-      };
-
-      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, options);
-      const scores = calculateScoresFromCounts(counts);
-
-      populateAdvisorFilter(scores);
-      updateSideStats(counts);
-
-      const advisorFilter = document.getElementById('filterAdvisor').value || '';
-      renderLeaderboard(scores, advisorFilter);
-    }
-
-    document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
-    document.getElementById('refreshBtn').addEventListener('click', () => loadAndRender());
-    document.getElementById('filterAdvisor').addEventListener('change', () => applyFiltersAndRender());
-
-    // Inicializar
-    loadAndRender();
-
-    /******************************************************************
-     * Auxiliares: fetch CSV, escape y formato hora
-     ******************************************************************/
-    async function fetchSheetCSVRows(sheetName){
-      const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')');
-      const text = await res.text();
-      return parseCSV(text);
-    }
-
-    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    function formatHHmm(date){
-      const d = new Date(date);
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    /******************************************************************
-     * Comentarios finales
-     *
-     * - La suma de +1 día para tickets se aplica exactamente cuando el checkbox
-     *   "Filtrar tickets por fecha" está activo; la fecha usada es la de la columna H.
-     * - Si quieres que los tickets sin fecha se excluyan siempre, desmarca
-     *   "Incluir tickets sin fecha cuando filtro activo".
-     * - Si prefieres que tickets sin fecha se consideren con una fecha por defecto,
-     *   puedo añadir esa opción (ej. asignar fecha de creación o fecha actual).
-     * - Si los conteos siguen sin coincidir, revisa en la consola (F12 → Console)
-     *   las primeras filas de cada pestaña para confirmar posiciones de columnas.
-     ******************************************************************/
-  </script>
+// Cargar datos al inicio
+loadAdvisorsAndInit();
+</script>
 </body>
 </html>
