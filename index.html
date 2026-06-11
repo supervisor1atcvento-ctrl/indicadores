@@ -90,10 +90,12 @@
         <label>Grupo</label>
         <select id="groupSelector">
           <option value="All">Todos (General)</option>
+          <option value="General">General</option>
+          <option value="Vento">Vento</option>
+          <option value="Piston">Piston</option>
+          <option value="Home Office">Home Office</option>
+          <option value="Nuevo ingreso">Nuevo ingreso</option>
           <option value="OTROS">OTROS</option>
-          <option value="VENTO">VENTO</option>
-          <option value="PISTON">PISTON</option>
-          <option value="HOME OFFICE">HOME OFFICE</option>
         </select>
       </div>
 
@@ -129,7 +131,7 @@
           </table>
         </div>
         <div style="margin-top:12px;color:var(--muted);font-size:13px">
-          Reglas: tickets canalizados (col M = CANALIZADO). Llamadas completed y duración &gt;35s. Chats duración ≤5min y agent flag = AGENT. Nombres consolidados por diccionario Asesores.
+          Reglas: tickets canalizados (col M = CANALIZADO). Llamadas completed y duración &gt;35s. Chats duración ≤5min y agent flag = AGENT. Nombres consolidados por diccionario Asesores; sin grupo → OTROS.
         </div>
       </section>
 
@@ -146,7 +148,8 @@
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
               • Fuente de grupos y supervisores: pestaña <strong>Asesores</strong> (tu hoja).<br>
-              • Nombres se normalizan y se agrupan por el diccionario cargado al inicio.
+              • Si una fila en Asesores no tiene grupo, se asigna automáticamente a <strong>OTROS</strong>.<br>
+              • Nuevo grupo añadido: <strong>Nuevo ingreso</strong>.
             </div>
           </div>
         </div>
@@ -159,7 +162,7 @@
      * CONFIG
      ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA'; // tu spreadsheet principal
-    const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE'; // hoja con Asesores (la que compartiste)
+    const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE'; // hoja con Asesores
     const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD', asesoresSheet: 'Asesores' };
 
     function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
@@ -254,13 +257,13 @@
     /******************************************************************
      * Construir aliasMap y metaMap desde la pestaña Asesores
      * - lee filas y toma columnas C (supervisor), D (username), E (group)
+     * - si group vacío -> asigna "OTROS"
      ******************************************************************/
     async function buildAliasAndMetaMaps(){
       aliasMap = {};
       metaMap = {};
       try{
         const rows = await fetchSheetCSVRowsById(ASSESSORS_SPREADSHEET_ID, SHEETS.asesoresSheet);
-        // rows is array of arrays; iterate and pick rows where username (col D) exists
         for(let r=0; r<rows.length; r++){
           const row = rows[r];
           const rawUser = (row[COL.asesores.username] || '').trim();
@@ -269,16 +272,16 @@
           if(!rawUser) continue;
           const keyNorm = normalizeForKey(rawUser);
           const canonical = titleCase(keyNorm);
-          const group = rawGroup ? rawGroup : 'General';
+          // Si no hay grupo, asignar OTROS
+          const group = rawGroup ? rawGroup : 'OTROS';
           const supervisor = rawSupervisor ? rawSupervisor : '';
           // store meta
           metaMap[canonical] = { group, supervisor };
           // map alias: normalized username -> canonical
           aliasMap[keyNorm] = canonical;
-          // also map the rawUser uppercase trimmed to canonical (defensive)
+          // defensive mapping for slight variants
           aliasMap[normalizeForKey(rawUser.replace(/\s+/g,' '))] = canonical;
         }
-        // Optionally log
         console.log('aliasMap built, entries:', Object.keys(aliasMap).length);
         console.log('metaMap built, entries:', Object.keys(metaMap).length);
       } catch(err){
@@ -297,9 +300,9 @@
       const candidates = Object.keys(metaMap);
       const found = candidates.find(c => c.toUpperCase() === norm.toUpperCase());
       if(found) return found;
-      // else use normalized title-case as canonical and default group General
+      // else use normalized title-case as canonical and default group OTROS
       const canonical = titleCase(norm);
-      if(!metaMap[canonical]) metaMap[canonical] = { group: 'General', supervisor: '' };
+      if(!metaMap[canonical]) metaMap[canonical] = { group: 'OTROS', supervisor: '' };
       aliasMap[norm] = canonical;
       return canonical;
     }
@@ -332,7 +335,7 @@
         const rawAdvisor = cell(row, COL.tickets.advisor);
         const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
         if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group: 'General', supervisor: '' };
+        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
         if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
 
@@ -355,7 +358,7 @@
         const rawAdvisor = cell(row, COL.chats.advisor);
         const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
         if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group: 'General', supervisor: '' };
+        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
         if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
 
@@ -384,7 +387,7 @@
         const rawAdvisor = cell(row, COL.calls.advisor);
         const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
         if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group: 'General', supervisor: '' };
+        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
         if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
 
@@ -410,7 +413,7 @@
     }
 
     /******************************************************************
-     * Score calculation and rendering (same as before)
+     * Score calculation and rendering
      ******************************************************************/
     function calculateScoresFromCounts(countsObj){
       const counts = countsObj;
