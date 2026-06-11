@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Consulta y export CSV</title>
+  <title>Dashboard Asesores — Exportación Tablas Crudas</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
@@ -21,7 +21,7 @@
     .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:end}
     .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow)}
     .control label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input[type="date"], select, input[type="text"]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px}
+    input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px}
     button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
     button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer}
 
@@ -69,8 +69,10 @@
     .loading-text{font-weight:700;color:var(--muted);animation:pulse 1.6s ease-in-out infinite}
     @keyframes pulse{0%{opacity:0.35}50%{opacity:1}100%{opacity:0.35}}
 
-    .query-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-    .query-row > *{flex:1}
+    /* Skeleton rows */
+    .skeleton-row td{background:linear-gradient(90deg,#f4f4f4,#fafafa,#f4f4f4);background-size:200% 100%;animation:shimmer 1.2s linear infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
     .small-btn{padding:8px 10px;border-radius:8px;border:1px solid var(--card-border);background:#fff;cursor:pointer}
   </style>
 </head>
@@ -81,7 +83,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Consulta base y export CSV</div>
+          <div class="subtitle">Exportación de tablas crudas</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -158,7 +160,7 @@
         </div>
       </section>
 
-      <!-- PANEL LATERAL: Estadísticas + Consulta y Export -->
+      <!-- PANEL LATERAL: Estadísticas + Export crudo -->
       <aside class="side">
         <div class="card">
           <h2>Estadísticas</h2>
@@ -171,53 +173,18 @@
 
           <hr style="margin:12px 0;border:none;border-top:1px solid rgba(35,31,32,0.04)">
 
-          <h2>Consultar base (on‑demand)</h2>
-          <div class="small-muted" style="margin-bottom:8px">Filtra la base cacheada y descarga los resultados en CSV</div>
-
-          <div class="query-row">
-            <input id="qAdvisor" type="text" placeholder="Asesor (nombre o parcial)">
-          </div>
-          <div class="query-row">
-            <select id="qType">
-              <option value="all">Tipo: Todos</option>
-              <option value="tickets">Tickets</option>
-              <option value="calls">Llamadas</option>
-              <option value="chats">Chats</option>
-            </select>
-          </div>
-          <div class="query-row">
-            <input id="qFrom" type="date" placeholder="Desde">
-            <input id="qTo" type="date" placeholder="Hasta">
-          </div>
-          <div class="query-row">
-            <select id="qSupervisor">
-              <option value="">Supervisor (opcional)</option>
-              <option value="IVAN GERARDO MORENO GARATACHEA">IVAN GERARDO MORENO GARATACHEA</option>
-              <option value="CECILIA CARRERA MORALES">CECILIA CARRERA MORALES</option>
-              <option value="OTROS">OTROS</option>
-            </select>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="small-btn" id="btnQuery">Consultar</button>
-            <button class="small-btn" id="btnDownloadQuery">Descargar CSV</button>
-          </div>
-
-          <hr style="margin:12px 0;border:none;border-top:1px solid rgba(35,31,32,0.04)">
-
           <h2>Exportar tablas crudas</h2>
-          <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
             <button class="small-btn" id="exportTickets">Export Tickets CSV</button>
             <button class="small-btn" id="exportChats">Export Chats CSV</button>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px">
             <button class="small-btn" id="exportCalls">Export Calls CSV</button>
           </div>
 
           <div style="margin-top:12px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
-              • La consulta usa los datos cacheados; descargar CSV permite trabajar offline y acelerar análisis.<br>
-              • Detalles individuales siguen protegidos por código <strong>SUPER</strong>.
+              • Las exportaciones descargan las tablas crudas cacheadas en CSV.<br>
+              • Los detalles individuales siguen protegidos por código <strong>SUPER</strong>.
             </div>
           </div>
         </div>
@@ -566,21 +533,12 @@
             <div class="advisor-name">${escapeHtml(row.name)}</div>
             <div class="meta-small">${metaMap[row.name] ? metaMap[row.name].group + ' · ' + (metaMap[row.name].supervisor || '') : ''}</div>
           </td>
-          <td><div class="vol count-cell" data-type="tickets" data-name="${escapeHtml(row.name)}">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
-          <td><div class="vol count-cell" data-type="calls" data-name="${escapeHtml(row.name)}">${row.calls}</div><div class="meta-small">${row.callPts} pts</div></td>
-          <td><div class="vol count-cell" data-type="chats" data-name="${escapeHtml(row.name)}">${row.chats}</div><div class="meta-small">${row.chatPts} pts</div></td>
+          <td><div class="vol">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
+          <td><div class="vol">${row.calls}</div><div class="meta-small">${row.callPts} pts</div></td>
+          <td><div class="vol">${row.chats}</div><div class="meta-small">${row.chatPts} pts</div></td>
           <td class="score">${row.total}</td>
         `;
         tbody.appendChild(tr);
-      });
-
-      // attach click handlers to count cells
-      document.querySelectorAll('.count-cell').forEach(el => {
-        el.addEventListener('click', async (e) => {
-          const type = el.getAttribute('data-type'); // tickets|calls|chats
-          const name = el.getAttribute('data-name');
-          await tryShowDetailsOnDemand(name, type);
-        });
       });
     }
 
@@ -613,7 +571,6 @@
         await buildAndRenderDetails(canonicalName, type);
         return;
       }
-      // show auth area and wait for validation
       document.getElementById('authArea').style.display = 'flex';
       document.getElementById('detailsArea').style.display = 'none';
       document.getElementById('authMsg').textContent = '';
@@ -773,9 +730,8 @@
     }
 
     /******************************************************************
-     * CONSULTA ON-DEMAND Y EXPORT CSV
+     * Export crudos completos
      ******************************************************************/
-    // convierte array de arrays (rows) a CSV string
     function rowsToCSV(rows){
       return rows.map(r => r.map(cell => {
         if(cell === null || cell === undefined) return '';
@@ -783,8 +739,6 @@
         return `"${s}"`;
       }).join(',')).join('\n');
     }
-
-    // descarga un CSV en el navegador
     function downloadCSV(text, filename){
       const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -797,130 +751,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // Construye filas de resultado (cabecera + filas) según tipo y filtros
-    function queryCacheAndBuildRows({ advisorLike, type, fromDate, toDate, supervisorFilter }){
-      const outRows = [];
-      // header
-      outRows.push(['Tipo','Fecha','AsesorRaw','Estado/Agent','Duración','Info']);
-      const from = fromDate ? new Date(fromDate + 'T00:00:00') : null;
-      const to = toDate ? new Date(toDate + 'T23:59:59') : null;
-      const advisorLikeNorm = advisorLike ? advisorLike.trim().toUpperCase() : '';
-
-      function passesDate(parsed){
-        if(!parsed) return false;
-        const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-        if(from && dd < from) return false;
-        if(to && dd > to) return false;
-        return true;
-      }
-
-      // helper meta filter
-      function passesMeta(advisorCanonical){
-        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
-        if(activeGroup !== 'All' && meta.group !== activeGroup) return false;
-        if(supervisorFilter){
-          if(String(meta.supervisor || '').toUpperCase() !== String(supervisorFilter || '').toUpperCase()) return false;
-        }
-        return true;
-      }
-
-      // tickets
-      if(type === 'all' || type === 'tickets'){
-        const rows = cache.tickets || [];
-        for(let r=1; r<rows.length; r++){
-          const row = rows[r];
-          const rawAdvisor = row[COL.tickets.advisor] || '';
-          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-          if(!advisorCanonical) continue;
-          if(!passesMeta(advisorCanonical)) continue;
-          if(advisorLikeNorm && advisorCanonical.toUpperCase().indexOf(advisorLikeNorm) === -1 && rawAdvisor.toUpperCase().indexOf(advisorLikeNorm) === -1) continue;
-          const status = String(row[COL.tickets.status] || '').trim().toUpperCase();
-          if(status !== 'CANALIZADO') continue;
-          const rawDate = row[COL.tickets.date];
-          const parsed = parseDateFlexible(rawDate);
-          if((from || to) && parsed && !passesDate(parsed)) continue;
-          if((from || to) && !parsed) continue; // si hay filtro y no hay fecha, excluir
-          outRows.push(['Ticket', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), rawAdvisor, status, '', row.join(' | ')]);
-        }
-      }
-
-      // chats
-      if(type === 'all' || type === 'chats'){
-        const rows = cache.chats || [];
-        for(let r=1; r<rows.length; r++){
-          const row = rows[r];
-          const rawAdvisor = row[COL.chats.advisor] || '';
-          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-          if(!advisorCanonical) continue;
-          if(!passesMeta(advisorCanonical)) continue;
-          if(advisorLikeNorm && advisorCanonical.toUpperCase().indexOf(advisorLikeNorm) === -1 && rawAdvisor.toUpperCase().indexOf(advisorLikeNorm) === -1) continue;
-          const rawDuration = row[COL.chats.duration];
-          const seconds = durationToSeconds(rawDuration);
-          if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
-          if(seconds > 300) continue;
-          const agentFlag = String(row[COL.chats.agentFlag] || '').trim().toUpperCase();
-          if(agentFlag !== 'AGENT') continue;
-          const rawDate = row[COL.chats.date];
-          const parsed = parseDateFlexible(rawDate);
-          if((from || to) && parsed && !passesDate(parsed)) continue;
-          if((from || to) && !parsed) continue;
-          outRows.push(['Chat', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), rawAdvisor, agentFlag, rawDuration || '', row.join(' | ')]);
-        }
-      }
-
-      // calls
-      if(type === 'all' || type === 'calls'){
-        const rows = cache.calls || [];
-        for(let r=1; r<rows.length; r++){
-          const row = rows[r];
-          const rawAdvisor = row[COL.calls.advisor] || '';
-          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-          if(!advisorCanonical) continue;
-          if(!passesMeta(advisorCanonical)) continue;
-          if(advisorLikeNorm && advisorCanonical.toUpperCase().indexOf(advisorLikeNorm) === -1 && rawAdvisor.toUpperCase().indexOf(advisorLikeNorm) === -1) continue;
-          const status = String(row[COL.calls.status] || '').trim().toLowerCase();
-          if(status !== 'completed') continue;
-          const rawDuration = row[COL.calls.duration];
-          const seconds = durationToSeconds(rawDuration);
-          if(seconds <= 35) continue;
-          const rawDate = row[COL.calls.date];
-          const parsed = parseDateFlexible(rawDate);
-          if((from || to) && parsed && !passesDate(parsed)) continue;
-          if((from || to) && !parsed) continue;
-          outRows.push(['Llamada', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), rawAdvisor, status, rawDuration || '', row.join(' | ')]);
-        }
-      }
-
-      return outRows;
-    }
-
-    /******************************************************************
-     * Export botones: consulta y export crudo
-     ******************************************************************/
-    document.getElementById('btnQuery').addEventListener('click', () => {
-      const advisorLike = document.getElementById('qAdvisor').value || '';
-      const type = document.getElementById('qType').value || 'all';
-      const from = document.getElementById('qFrom').value || '';
-      const to = document.getElementById('qTo').value || '';
-      const sup = document.getElementById('qSupervisor').value || '';
-      const rows = queryCacheAndBuildRows({ advisorLike, type, fromDate: from, toDate: to, supervisorFilter: sup });
-      // mostrar conteo rápido en alert y permitir descargar
-      alert(`Consulta lista: ${rows.length - 1} registros encontrados. Usa "Descargar CSV" para bajar el archivo.`);
-      // guardamos temporalmente en window para descarga posterior
-      window.__lastQueryCSV = rowsToCSV(rows);
-    });
-
-    document.getElementById('btnDownloadQuery').addEventListener('click', () => {
-      const csv = window.__lastQueryCSV;
-      if(!csv){
-        alert('Primero ejecuta "Consultar" para generar el CSV.');
-        return;
-      }
-      const now = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-      downloadCSV(csv, `consulta_base_${now}.csv`);
-    });
-
-    // Export crudos completos
     document.getElementById('exportTickets').addEventListener('click', () => {
       if(!cache.tickets || cache.tickets.length === 0){ alert('No hay datos de Tickets en cache. Refresca.'); return; }
       const csv = rowsToCSV(cache.tickets);
@@ -947,7 +777,6 @@
         document.getElementById('lastSync').textContent = formatHHmm(new Date());
         await buildAliasAndMetaMaps();
         populateSupervisorFilter();
-        // fetch raw sheets and cache them
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.tickets),
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.chats),
