@@ -2,13 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Detalles protegidos</title>
+  <title>Dashboard Asesores — Carga optimizada y detalles bajo clave</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
       --bg:#FFFFFF; --surface:#FAFAFB; --muted:#616160; --text:#231F20; --accent:#F28F17;
       --card-border:rgba(35,31,32,0.06); --radius:12px; --shadow:0 8px 24px rgba(35,31,32,0.06);
       --tab-bg:#F7F7F8; --tab-active:#FFF; --tab-border:#E9E7E6;
+      --spinner-size:64px;
     }
     html,body{height:100%;margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);-webkit-font-smoothing:antialiased}
     .wrap{max-width:1200px;margin:28px auto;padding:20px}
@@ -60,6 +61,17 @@
     .modal .close{float:right;background:transparent;border:none;font-weight:800;font-size:18px;cursor:pointer}
     .secret-prompt{display:flex;gap:8px;align-items:center;margin-bottom:12px}
     .small-muted{font-size:12px;color:var(--muted)}
+
+    /* Global loading overlay */
+    .loading-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);z-index:9998}
+    .spinner{
+      width:var(--spinner-size);height:var(--spinner-size);border-radius:50%;border:8px solid rgba(0,0,0,0.08);border-top-color:var(--accent);animation:spin 1s linear infinite;
+      display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent)
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* small helper */
+    .muted-inline{color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
@@ -69,7 +81,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Suma de puntajes · Detalles protegidos por código</div>
+          <div class="subtitle">Carga optimizada · Detalles protegidos</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -159,12 +171,17 @@
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
               • Para ver detalles (tickets/chats/llamadas) haz clic en la cantidad; se requiere código <strong>SUPER</strong> para acceder.<br>
-              • Si una fila en Asesores no tiene grupo, se asigna automáticamente a <strong>OTROS</strong>.
+              • Los detalles se cargan solo cuando se solicitan para acelerar la vista principal.
             </div>
           </div>
         </div>
       </aside>
     </main>
+  </div>
+
+  <!-- Global loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+    <div class="spinner" role="status" aria-live="polite">Cargando</div>
   </div>
 
   <!-- Modal backdrop -->
@@ -197,7 +214,7 @@
 
   <script>
     /******************************************************************
-     * CONFIG y mapeos (igual que antes)
+     * CONFIG
      ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
     const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE';
@@ -214,10 +231,11 @@
 
     let aliasMap = {};
     let metaMap = {};
-    let cache = { tickets:[], chats:[], calls:[] };
+    let cache = { tickets:[], chats:[], calls:[] }; // raw CSV rows cached
+    let activeGroup = 'All';
 
     /******************************************************************
-     * CSV parser y utilidades
+     * UTILIDADES
      ******************************************************************/
     function parseCSV(text){
       const rows = [];
@@ -341,13 +359,11 @@
     }
 
     /******************************************************************
-     * Agregación con almacenamiento de listas de detalle por asesor
-     * - Además de counts, guardamos arrays: details[canonical] = { tickets:[], chats:[], calls:[] }
+     * Agregación de counts (sin detalles). Detalles se generan on-demand.
      ******************************************************************/
-    function aggregateCountsAndDetails(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
+    function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
       const counts = {};
-      const details = {}; // canonical -> { tickets:[], chats:[], calls:[] }
-      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; if(!details[name]) details[name] = { tickets:[], chats:[], calls:[] }; }
+      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
       function inRangeDate(d, from, to){
         if(!d) return false;
         const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -378,14 +394,6 @@
         }
         ensure(advisorCanonical);
         counts[advisorCanonical].tickets += 1;
-        details[advisorCanonical].tickets.push({
-          tipo: 'Ticket',
-          fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
-          asesor_raw: rawAdvisor,
-          estado: rawStatus || '',
-          duracion: '',
-          info: row.join(' | ')
-        });
       }
 
       // Chats
@@ -414,14 +422,6 @@
         }
         ensure(advisorCanonical);
         counts[advisorCanonical].chats += 1;
-        details[advisorCanonical].chats.push({
-          tipo: 'Chat',
-          fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
-          asesor_raw: rawAdvisor,
-          estado: agentFlag,
-          duracion: rawDuration || '',
-          info: row.join(' | ')
-        });
       }
 
       // Calls
@@ -449,23 +449,13 @@
         }
         ensure(advisorCanonical);
         counts[advisorCanonical].calls += 1;
-        details[advisorCanonical].calls.push({
-          tipo: 'Llamada',
-          fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
-          asesor_raw: rawAdvisor,
-          estado: rawStatus || '',
-          duracion: rawDuration || '',
-          info: row.join(' | ')
-        });
       }
 
-      return { counts, details };
+      return counts;
     }
 
     /******************************************************************
-     * Cálculo de puntajes: ahora SUMA de puntos (no promedio)
-     * - Cada canal: 100 pts al máximo proporcional al máximo del canal
-     * - Puntaje total = ticketPts + callPts + chatPts (suma)
+     * Cálculo de puntajes: SUMA de puntos (no promedio)
      ******************************************************************/
     function calculateScoresFromCountsSum(countsObj){
       const counts = countsObj;
@@ -483,7 +473,7 @@
         const ticketPts = maxTickets ? (c.tickets / maxTickets) * 100 : 0;
         const callPts   = maxCalls   ? (c.calls   / maxCalls)   * 100 : 0;
         const chatPts   = maxChats   ? (c.chats   / maxChats)   * 100 : 0;
-        const total = ticketPts + callPts + chatPts; // SUMA en lugar de promedio
+        const total = ticketPts + callPts + chatPts; // SUMA
         return {
           name,
           tickets: c.tickets,
@@ -500,9 +490,9 @@
     }
 
     /******************************************************************
-     * Renderizado y eventos: ahora las celdas de cantidad son clicables
+     * Renderizado: celdas clicables para pedir detalles on-demand
      ******************************************************************/
-    function renderLeaderboard(scores, details){
+    function renderLeaderboard(scores){
       const tbody = document.querySelector('#leaderboardTable tbody');
       tbody.innerHTML = '';
       if(scores.length === 0){
@@ -531,21 +521,22 @@
         el.addEventListener('click', async (e) => {
           const type = el.getAttribute('data-type'); // tickets|calls|chats
           const name = el.getAttribute('data-name');
-          await tryShowDetails(name, type, details);
+          await tryShowDetailsOnDemand(name, type);
         });
       });
     }
 
     /******************************************************************
-     * Modal + auth logic
+     * On-demand details generation (scans cached raw rows)
+     * - Shows loading spinner while building
      ******************************************************************/
-    const SECRET_CODE = 'SUPER'; // código requerido
-    function showModal(){
-      document.getElementById('modalBackdrop').style.display = 'flex';
-    }
+    const SECRET_CODE = 'SUPER';
+    function showLoading(){ document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoading(){ document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function showModal(){ document.getElementById('modalBackdrop').style.display = 'flex'; }
     function hideModal(){
       document.getElementById('modalBackdrop').style.display = 'none';
-      // reset auth UI
       document.getElementById('authArea').style.display = 'flex';
       document.getElementById('detailsArea').style.display = 'none';
       document.getElementById('secretInput').value = '';
@@ -555,87 +546,203 @@
     document.getElementById('modalClose').addEventListener('click', hideModal);
     document.getElementById('modalBackdrop').addEventListener('click', (e) => { if(e.target.id === 'modalBackdrop') hideModal(); });
 
-    // check session (if user already validated in this tab)
-    function isAuthorized(){
-      try{ return sessionStorage.getItem('authorized') === '1'; } catch(e){ return false; }
-    }
-    function setAuthorized(){
-      try{ sessionStorage.setItem('authorized','1'); } catch(e){}
-    }
+    function isAuthorized(){ try{ return sessionStorage.getItem('authorized') === '1'; } catch(e){ return false; } }
+    function setAuthorized(){ try{ sessionStorage.setItem('authorized','1'); } catch(e){} }
 
-    async function tryShowDetails(canonicalName, type, details){
-      // details is the object returned by aggregateCountsAndDetails
+    async function tryShowDetailsOnDemand(canonicalName, type){
       showModal();
       document.getElementById('modalTitle').textContent = `Detalles: ${canonicalName} — ${type}`;
-      // if already authorized, show immediately
       if(isAuthorized()){
-        renderDetailsTable(canonicalName, type, details);
+        await buildAndRenderDetails(canonicalName, type);
         return;
       }
-      // else wait for validation
+      // show auth area and wait for validation
       document.getElementById('authArea').style.display = 'flex';
       document.getElementById('detailsArea').style.display = 'none';
       document.getElementById('authMsg').textContent = '';
-      // attach handler for secretBtn
       const secretBtn = document.getElementById('secretBtn');
       const secretInput = document.getElementById('secretInput');
-      const handler = () => {
+
+      const handler = async () => {
         const val = (secretInput.value || '').trim();
         if(val === SECRET_CODE){
           setAuthorized();
           document.getElementById('authMsg').textContent = 'Acceso concedido';
-          renderDetailsTable(canonicalName, type, details);
+          await buildAndRenderDetails(canonicalName, type);
           secretBtn.removeEventListener('click', handler);
         } else {
           document.getElementById('authMsg').textContent = 'Código incorrecto';
         }
       };
-      secretBtn.removeEventListener('click', handler); // safe
+      secretBtn.removeEventListener('click', handler);
       secretBtn.addEventListener('click', handler);
-      // allow Enter key
       secretInput.addEventListener('keydown', function onKey(e){
         if(e.key === 'Enter'){ handler(); secretInput.removeEventListener('keydown', onKey); }
       });
     }
 
-    function renderDetailsTable(canonicalName, type, details){
+    async function buildAndRenderDetails(canonicalName, type){
+      // show spinner inside modal and global loading
       document.getElementById('authArea').style.display = 'none';
-      document.getElementById('detailsArea').style.display = 'block';
+      document.getElementById('detailsArea').style.display = 'none';
+      showLoading();
+      // simulate processing time and build details by scanning cached rows
+      await new Promise(resolve => setTimeout(resolve, 150)); // tiny pause for UX
+      const list = [];
+      const { fromDateOnly, toDateOnly } = getPeriodRange();
+      const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
+      const selectedSupervisor = selectedSupervisorRaw || '';
+
+      // helper to check meta filters
+      function passesMeta(advisorCanonical){
+        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
+        if(activeGroup !== 'All' && meta.group !== activeGroup) return false;
+        if(selectedSupervisor){
+          if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) return false;
+        }
+        return true;
+      }
+
+      // scan tickets if requested
+      if(type === 'tickets' || type === 'all'){
+        const rows = cache.tickets || [];
+        for(let r=1; r<rows.length; r++){
+          const row = rows[r];
+          const rawAdvisor = (row[COL.tickets.advisor] || '');
+          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+          if(!advisorCanonical) continue;
+          if(advisorCanonical !== canonicalName) continue;
+          if(!passesMeta(advisorCanonical)) continue;
+          const rawStatus = (row[COL.tickets.status] || '').trim().toUpperCase();
+          if(rawStatus !== 'CANALIZADO') continue;
+          const rawDate = row[COL.tickets.date];
+          const parsed = parseDateFlexible(rawDate);
+          if((fromDateOnly || toDateOnly) && parsed){
+            const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+            if(fromDateOnly && dd < fromDateOnly) continue;
+            if(toDateOnly && dd > toDateOnly) continue;
+          }
+          list.push({
+            tipo: 'Ticket',
+            fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
+            asesor_raw: rawAdvisor,
+            estado: rawStatus || '',
+            duracion: '',
+            info: row.join(' | ')
+          });
+        }
+      }
+
+      // scan chats
+      if(type === 'chats' || type === 'all'){
+        const rows = cache.chats || [];
+        for(let r=1; r<rows.length; r++){
+          const row = rows[r];
+          const rawAdvisor = (row[COL.chats.advisor] || '');
+          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+          if(!advisorCanonical) continue;
+          if(advisorCanonical !== canonicalName) continue;
+          if(!passesMeta(advisorCanonical)) continue;
+          const rawDuration = row[COL.chats.duration];
+          const seconds = durationToSeconds(rawDuration);
+          if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
+          if(seconds > 300) continue;
+          const rawAgent = (row[COL.chats.agentFlag] || '').trim().toUpperCase();
+          if(rawAgent !== 'AGENT') continue;
+          const rawDate = row[COL.chats.date];
+          const parsed = parseDateFlexible(rawDate);
+          if((fromDateOnly || toDateOnly) && parsed){
+            const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+            if(fromDateOnly && dd < fromDateOnly) continue;
+            if(toDateOnly && dd > toDateOnly) continue;
+          }
+          list.push({
+            tipo: 'Chat',
+            fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
+            asesor_raw: rawAdvisor,
+            estado: rawAgent || '',
+            duracion: rawDuration || '',
+            info: row.join(' | ')
+          });
+        }
+      }
+
+      // scan calls
+      if(type === 'calls' || type === 'all'){
+        const rows = cache.calls || [];
+        for(let r=1; r<rows.length; r++){
+          const row = rows[r];
+          const rawAdvisor = (row[COL.calls.advisor] || '');
+          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+          if(!advisorCanonical) continue;
+          if(advisorCanonical !== canonicalName) continue;
+          if(!passesMeta(advisorCanonical)) continue;
+          const rawStatus = (row[COL.calls.status] || '').trim().toLowerCase();
+          if(rawStatus !== 'completed') continue;
+          const rawDuration = row[COL.calls.duration];
+          const seconds = durationToSeconds(rawDuration);
+          if(seconds <= 35) continue;
+          const rawDate = row[COL.calls.date];
+          const parsed = parseDateFlexible(rawDate);
+          if((fromDateOnly || toDateOnly) && parsed){
+            const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+            if(fromDateOnly && dd < fromDateOnly) continue;
+            if(toDateOnly && dd > toDateOnly) continue;
+          }
+          list.push({
+            tipo: 'Llamada',
+            fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
+            asesor_raw: rawAdvisor,
+            estado: rawStatus || '',
+            duracion: rawDuration || '',
+            info: row.join(' | ')
+          });
+        }
+      }
+
+      hideLoading();
+      // render
       document.getElementById('detailsHeader').textContent = `${canonicalName} — ${type}`;
       const tbody = document.getElementById('detailsTable').querySelector('tbody');
       tbody.innerHTML = '';
-      const list = (details[canonicalName] && details[canonicalName][type]) ? details[canonicalName][type] : [];
-      if(!list || list.length === 0){
+      if(!list.length){
         tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay registros para mostrar</td></tr>';
-        return;
+      } else {
+        list.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHtml(item.tipo)}</td><td>${escapeHtml(item.fecha)}</td><td>${escapeHtml(item.asesor_raw)}</td><td>${escapeHtml(item.estado)}</td><td>${escapeHtml(item.duracion)}</td><td>${escapeHtml(item.info)}</td>`;
+          tbody.appendChild(tr);
+        });
       }
-      list.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${escapeHtml(item.tipo)}</td><td>${escapeHtml(item.fecha)}</td><td>${escapeHtml(item.asesor_raw)}</td><td>${escapeHtml(item.estado)}</td><td>${escapeHtml(item.duracion)}</td><td>${escapeHtml(item.info)}</td>`;
-        tbody.appendChild(tr);
-      });
+      document.getElementById('authArea').style.display = 'none';
+      document.getElementById('detailsArea').style.display = 'block';
     }
 
     /******************************************************************
-     * Main flow
+     * Main flow: load mapping first, then only counts (cache raw rows)
      ******************************************************************/
     async function loadAndRender(){
       try{
+        showLoading();
         document.getElementById('lastSync').textContent = formatHHmm(new Date());
         await buildAliasAndMetaMaps();
         populateSupervisorFilter();
+        // fetch raw sheets and cache them
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
-          fetchMainSheetRows(SHEETS.tickets),
-          fetchMainSheetRows(SHEETS.chats),
-          fetchMainSheetRows(SHEETS.calls)
+          fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.tickets),
+          fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.chats),
+          fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.calls)
         ]);
         cache.tickets = ticketsRows;
         cache.chats = chatsRows;
         cache.calls = callsRows;
+        // compute counts only (fast)
         applyFiltersAndRender();
       } catch(err){
         console.error(err);
         alert('Error al cargar datos: ' + err.message + '. Revisa permisos de las hojas o la consola.');
+      } finally{
+        hideLoading();
       }
     }
 
@@ -689,12 +796,27 @@
       const { fromDateOnly, toDateOnly } = getPeriodRange();
       const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
       const selectedSupervisor = selectedSupervisorRaw || '';
-      const { counts, details } = aggregateCountsAndDetails(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, activeGroup, selectedSupervisor);
+      // compute counts only (fast) using cached raw rows
+      const counts = aggregateCountsOnly(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, activeGroup, selectedSupervisor);
       const scores = calculateScoresFromCountsSum(counts);
       updateSideStats(counts);
-      renderLeaderboard(scores, details);
+      renderLeaderboard(scores);
     }
 
+    function updateSideStats(counts){
+      const advisors = Object.keys(counts).length;
+      const totalTickets = Object.values(counts).reduce((s,c)=>s+(c.tickets||0),0);
+      const totalCalls = Object.values(counts).reduce((s,c)=>s+(c.calls||0),0);
+      const totalChats = Object.values(counts).reduce((s,c)=>s+(c.chats||0),0);
+      document.getElementById('statAdvisors').textContent = advisors;
+      document.getElementById('statTickets').textContent = totalTickets;
+      document.getElementById('statCalls').textContent = totalCalls;
+      document.getElementById('statChats').textContent = totalChats;
+    }
+
+    /******************************************************************
+     * Events and init
+     ******************************************************************/
     document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
     document.getElementById('refreshBtn').addEventListener('click', () => loadAndRender());
     document.getElementById('periodSelector').addEventListener('change', () => {
@@ -708,8 +830,6 @@
     });
     document.getElementById('filterSupervisor').addEventListener('change', () => applyFiltersAndRender());
 
-    // Tabs behavior
-    let activeGroup = 'All';
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
