@@ -265,8 +265,10 @@
           if(!rawUser) continue;
           const keyNorm = normalizeForKey(rawUser);
           const canonical = titleCase(keyNorm);
+          // if no group -> OTROS
           const group = rawGroup ? rawGroup : 'OTROS';
-          const supervisor = rawSupervisor ? rawSupervisor : '';
+          // normalize supervisor to title case if present, else OTROS
+          const supervisor = rawSupervisor ? titleCase(rawSupervisor) : 'OTROS';
           metaMap[canonical] = { group, supervisor };
           aliasMap[keyNorm] = canonical;
           aliasMap[normalizeForKey(rawUser.replace(/\s+/g,' '))] = canonical;
@@ -284,7 +286,7 @@
       const found = candidates.find(c => c.toUpperCase() === norm.toUpperCase());
       if(found) return found;
       const canonical = titleCase(norm);
-      if(!metaMap[canonical]) metaMap[canonical] = { group: 'OTROS', supervisor: '' };
+      if(!metaMap[canonical]) metaMap[canonical] = { group: 'OTROS', supervisor: 'OTROS' };
       aliasMap[norm] = canonical;
       return canonical;
     }
@@ -310,9 +312,12 @@
         const rawAdvisor = cell(row, COL.tickets.advisor);
         const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
         if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
+        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
-        if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
+        if(selectedSupervisor){
+          // compare uppercase to be robust
+          if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
+        }
         const rawStatus = cell(row, COL.tickets.status);
         const status = String(rawStatus || '').trim().toUpperCase();
         if(status !== 'CANALIZADO') continue;
@@ -330,9 +335,11 @@
         const rawAdvisor = cell(row, COL.chats.advisor);
         const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
         if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
+        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
-        if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
+        if(selectedSupervisor){
+          if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
+        }
         const rawDuration = cell(row, COL.chats.duration);
         const seconds = durationToSeconds(rawDuration);
         if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
@@ -355,9 +362,11 @@
         const rawAdvisor = cell(row, COL.calls.advisor);
         const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
         if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
+        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
-        if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
+        if(selectedSupervisor){
+          if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
+        }
         const rawStatus = cell(row, COL.calls.status);
         const status = String(rawStatus || '').trim().toLowerCase();
         if(status !== 'completed') continue;
@@ -436,11 +445,22 @@
 
     function populateSupervisorFilter(){
       const sel = document.getElementById('filterSupervisor');
-      sel.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
-      const supervisors = new Set();
-      Object.values(metaMap).forEach(m => { if(m.supervisor) supervisors.add(m.supervisor); });
-      Array.from(supervisors).sort().forEach(sup => {
-        const opt = document.createElement('option'); opt.value = sup; opt.textContent = sup; sel.appendChild(opt);
+      sel.innerHTML = '';
+      // Fixed options as requested
+      const fixedOptions = [
+        "IVAN GERARDO MORENO GARATACHEA",
+        "CECILIA CARRERA MORALES",
+        "OTROS"
+      ];
+      const firstOpt = document.createElement('option');
+      firstOpt.value = '';
+      firstOpt.textContent = 'Todos los supervisores';
+      sel.appendChild(firstOpt);
+      fixedOptions.forEach(sup => {
+        const opt = document.createElement('option');
+        opt.value = sup;
+        opt.textContent = sup;
+        sel.appendChild(opt);
       });
     }
 
@@ -506,7 +526,9 @@
 
     function applyFiltersAndRender(){
       const { fromDateOnly, toDateOnly } = getPeriodRange();
-      const selectedSupervisor = document.getElementById('filterSupervisor').value || '';
+      const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
+      // selectedSupervisorRaw may be one of the fixed options or empty
+      const selectedSupervisor = selectedSupervisorRaw || '';
       const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, activeGroup, selectedSupervisor);
       const scores = calculateScoresFromCounts(counts);
       updateSideStats(counts);
