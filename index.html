@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Consolidado con Alias y Grupos</title>
+  <title>Dashboard Asesores — Consolidado con Tabs de Grupo</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
       --bg:#FFFFFF; --surface:#FAFAFB; --muted:#616160; --text:#231F20; --accent:#F28F17;
       --card-border:rgba(35,31,32,0.06); --radius:12px; --shadow:0 8px 24px rgba(35,31,32,0.06);
+      --tab-bg:#F7F7F8; --tab-active:#FFF; --tab-border:#E9E7E6;
     }
     html,body{height:100%;margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);-webkit-font-smoothing:antialiased}
     .wrap{max-width:1200px;margin:28px auto;padding:20px}
@@ -17,12 +18,21 @@
     h1{font-size:38px;margin:0;font-weight:700}
     .subtitle{font-size:14px;color:var(--muted);margin-top:6px}
 
-    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;align-items:end}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:end}
     .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow)}
     .control label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px}
     button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
     button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer}
+
+    /* Tabs */
+    .tabs{display:flex;gap:8px;margin:12px 0 18px 0}
+    .tab{
+      background:var(--tab-bg);border:1px solid var(--tab-border);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:700;color:var(--muted);
+      transition:all .12s ease;
+    }
+    .tab:hover{transform:translateY(-2px)}
+    .tab.active{background:var(--tab-active);color:var(--text);box-shadow:var(--shadow);border-color:rgba(35,31,32,0.06)}
 
     .layout{display:grid;grid-template-columns:1fr 360px;gap:18px}
     @media(max-width:980px){.layout{grid-template-columns:1fr}}
@@ -86,20 +96,7 @@
         <input type="date" id="dateTo">
       </div>
 
-      <div class="control">
-        <label>Grupo</label>
-        <select id="groupSelector">
-          <option value="All">Todos (General)</option>
-          <option value="General">General</option>
-          <option value="Vento">Vento</option>
-          <option value="Piston">Piston</option>
-          <option value="Home Office">Home Office</option>
-          <option value="Nuevo ingreso">Nuevo ingreso</option>
-          <option value="OTROS">OTROS</option>
-        </select>
-      </div>
-
-      <div class="control">
+      <div class="control" style="min-width:260px">
         <label>Supervisor</label>
         <select id="filterSupervisor">
           <option value="">Todos los supervisores</option>
@@ -110,6 +107,16 @@
         <button class="primary" id="applyFilters">Aplicar</button>
         <button class="ghost" id="refreshBtn">Refrescar</button>
       </div>
+    </div>
+
+    <!-- Tabs de Grupo -->
+    <div class="tabs" role="tablist" aria-label="Grupos">
+      <div class="tab active" data-group="All">Todos</div>
+      <div class="tab" data-group="Vento">Vento</div>
+      <div class="tab" data-group="Piston">Piston</div>
+      <div class="tab" data-group="Home Office">Home Office</div>
+      <div class="tab" data-group="Nuevo ingreso">Nuevo ingreso</div>
+      <div class="tab" data-group="OTROS">OTROS</div>
     </div>
 
     <main class="layout">
@@ -161,29 +168,22 @@
     /******************************************************************
      * CONFIG
      ******************************************************************/
-    const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA'; // tu spreadsheet principal
-    const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE'; // hoja con Asesores
+    const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
+    const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE';
     const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD', asesoresSheet: 'Asesores' };
 
     function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
 
-    // Column mapping (0-based)
     const COL = {
       tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), status: letterToIndex('M') },
       chats:  { advisor: letterToIndex('B'), duration: letterToIndex('C'), date: letterToIndex('I'), agentFlag: letterToIndex('M') },
       calls:  { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('G') },
-      asesores: { supervisor: letterToIndex('C'), username: letterToIndex('D'), group: letterToIndex('E') } // C,D,E
+      asesores: { supervisor: letterToIndex('C'), username: letterToIndex('D'), group: letterToIndex('E') }
     };
 
-    /******************************************************************
-     * Estado en memoria: aliasMap y metaMap
-     ******************************************************************/
-    let aliasMap = {}; // normalized alias -> canonical (Title Case)
-    let metaMap = {};  // canonical -> { group, supervisor }
+    let aliasMap = {};
+    let metaMap = {};
 
-    /******************************************************************
-     * UTILIDADES: parse CSV, normalize, titleCase, duration parser
-     ******************************************************************/
     function parseCSV(text){
       const rows = [];
       let cur = '', row = [], inQuotes = false;
@@ -212,9 +212,8 @@
     function normalizeForKey(s){
       if(s === null || s === undefined) return '';
       let t = String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').trim();
-      t = t.replace(/[\.\,]/g,''); // quitar puntos/comas
+      t = t.replace(/[\.\,]/g,'');
       t = t.toUpperCase();
-      // eliminar prefijos/sufijos comunes
       const tokens = ['ATC PISTON','ATC SUP','ATC','SUP','CORD','COORD','ANL','CAP','AGT','AGENTE','SR','SRA'];
       for(const tk of tokens){
         const reStart = new RegExp('^\\s*' + tk + '[\\s\\-\\_\\.]*','i');
@@ -222,7 +221,6 @@
         const reEnd = new RegExp('[\\s\\-\\_\\.]*' + tk + '\\s*$','i');
         t = t.replace(reEnd,'');
       }
-      // reordenar "LAST, FIRST" -> "FIRST LAST"
       if(t.includes(',')){
         const parts = t.split(',');
         if(parts.length >= 2){
@@ -254,11 +252,6 @@
       return total;
     }
 
-    /******************************************************************
-     * Construir aliasMap y metaMap desde la pestaña Asesores
-     * - lee filas y toma columnas C (supervisor), D (username), E (group)
-     * - si group vacío -> asigna "OTROS"
-     ******************************************************************/
     async function buildAliasAndMetaMaps(){
       aliasMap = {};
       metaMap = {};
@@ -272,51 +265,34 @@
           if(!rawUser) continue;
           const keyNorm = normalizeForKey(rawUser);
           const canonical = titleCase(keyNorm);
-          // Si no hay grupo, asignar OTROS
           const group = rawGroup ? rawGroup : 'OTROS';
           const supervisor = rawSupervisor ? rawSupervisor : '';
-          // store meta
           metaMap[canonical] = { group, supervisor };
-          // map alias: normalized username -> canonical
           aliasMap[keyNorm] = canonical;
-          // defensive mapping for slight variants
           aliasMap[normalizeForKey(rawUser.replace(/\s+/g,' '))] = canonical;
         }
-        console.log('aliasMap built, entries:', Object.keys(aliasMap).length);
-        console.log('metaMap built, entries:', Object.keys(metaMap).length);
       } catch(err){
         console.warn('No se pudo cargar Asesores sheet:', err.message);
       }
     }
 
-    /******************************************************************
-     * Mapear un raw advisor a canonical usando aliasMap y metaMap
-     ******************************************************************/
     function mapAdvisorToCanonical(raw){
       const norm = normalizeForKey(raw);
       if(!norm) return '';
       if(aliasMap[norm]) return aliasMap[norm];
-      // fallback: try exact match on canonical keys (case-insensitive)
       const candidates = Object.keys(metaMap);
       const found = candidates.find(c => c.toUpperCase() === norm.toUpperCase());
       if(found) return found;
-      // else use normalized title-case as canonical and default group OTROS
       const canonical = titleCase(norm);
       if(!metaMap[canonical]) metaMap[canonical] = { group: 'OTROS', supervisor: '' };
       aliasMap[norm] = canonical;
       return canonical;
     }
 
-    /******************************************************************
-     * Fetch CSV helper for main sheets (uses main spreadsheet id)
-     ******************************************************************/
     async function fetchMainSheetRows(sheetName){
       return fetchSheetCSVRowsById(SPREADSHEET_ID, sheetName);
     }
 
-    /******************************************************************
-     * Agregación de conteos (usa canonical names)
-     ******************************************************************/
     function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
       const counts = {};
       function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
@@ -329,7 +305,6 @@
       }
       function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
 
-      // Tickets: only if status === CANALIZADO
       for(let r=1; r<ticketsRows.length; r++){
         const row = ticketsRows[r];
         const rawAdvisor = cell(row, COL.tickets.advisor);
@@ -338,11 +313,9 @@
         const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
         if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
-
         const rawStatus = cell(row, COL.tickets.status);
         const status = String(rawStatus || '').trim().toUpperCase();
         if(status !== 'CANALIZADO') continue;
-
         const rawDate = cell(row, COL.tickets.date);
         const parsed = parseDateFlexible(rawDate);
         if((filterFrom || filterTo) && parsed){
@@ -352,7 +325,6 @@
         counts[advisorCanonical].tickets += 1;
       }
 
-      // Chats: duration col C <= 300s and agentFlag col M === AGENT
       for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
         const rawAdvisor = cell(row, COL.chats.advisor);
@@ -361,16 +333,13 @@
         const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
         if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
-
         const rawDuration = cell(row, COL.chats.duration);
         const seconds = durationToSeconds(rawDuration);
         if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
         if(seconds > 300) continue;
-
         const rawAgent = cell(row, COL.chats.agentFlag);
         const agentFlag = String(rawAgent || '').trim().toUpperCase();
         if(agentFlag !== 'AGENT') continue;
-
         const rawDate = cell(row, COL.chats.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
@@ -381,7 +350,6 @@
         counts[advisorCanonical].chats += 1;
       }
 
-      // Calls: status D === completed and duration G > 35s
       for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
         const rawAdvisor = cell(row, COL.calls.advisor);
@@ -390,15 +358,12 @@
         const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: '' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
         if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
-
         const rawStatus = cell(row, COL.calls.status);
         const status = String(rawStatus || '').trim().toLowerCase();
         if(status !== 'completed') continue;
-
         const rawDuration = cell(row, COL.calls.duration);
         const seconds = durationToSeconds(rawDuration);
         if(seconds <= 35) continue;
-
         const rawDate = cell(row, COL.calls.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
@@ -412,9 +377,6 @@
       return counts;
     }
 
-    /******************************************************************
-     * Score calculation and rendering
-     ******************************************************************/
     function calculateScoresFromCounts(countsObj){
       const counts = countsObj;
       const advisors = Object.keys(counts);
@@ -493,9 +455,6 @@
       document.getElementById('statChats').textContent = totalChats;
     }
 
-    /******************************************************************
-     * Period helper
-     ******************************************************************/
     function getPeriodRange(){
       const sel = document.getElementById('periodSelector').value;
       const today = new Date();
@@ -522,19 +481,14 @@
       return { fromDateOnly, toDateOnly };
     }
 
-    /******************************************************************
-     * Main flow: load asesores mapping first, then main sheets
-     ******************************************************************/
     let cache = { tickets:[], chats:[], calls:[] };
+    let activeGroup = 'All';
 
     async function loadAndRender(){
       try{
         document.getElementById('lastSync').textContent = formatHHmm(new Date());
-        // 1) build alias/meta maps from Asesores sheet (external spreadsheet)
         await buildAliasAndMetaMaps();
         populateSupervisorFilter();
-
-        // 2) fetch main sheets
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
           fetchMainSheetRows(SHEETS.tickets),
           fetchMainSheetRows(SHEETS.chats),
@@ -543,7 +497,6 @@
         cache.tickets = ticketsRows;
         cache.chats = chatsRows;
         cache.calls = callsRows;
-
         applyFiltersAndRender();
       } catch(err){
         console.error(err);
@@ -553,12 +506,9 @@
 
     function applyFiltersAndRender(){
       const { fromDateOnly, toDateOnly } = getPeriodRange();
-      const selectedGroup = document.getElementById('groupSelector').value || 'All';
       const selectedSupervisor = document.getElementById('filterSupervisor').value || '';
-
-      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, selectedGroup, selectedSupervisor);
+      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, activeGroup, selectedSupervisor);
       const scores = calculateScoresFromCounts(counts);
-
       updateSideStats(counts);
       renderLeaderboard(scores);
     }
@@ -574,15 +524,21 @@
       }
       applyFiltersAndRender();
     });
-    document.getElementById('groupSelector').addEventListener('change', () => applyFiltersAndRender());
     document.getElementById('filterSupervisor').addEventListener('change', () => applyFiltersAndRender());
+
+    // Tabs behavior
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeGroup = tab.getAttribute('data-group') || 'All';
+        applyFiltersAndRender();
+      });
+    });
 
     // init
     loadAndRender();
 
-    /******************************************************************
-     * Aux helpers
-     ******************************************************************/
     function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function formatHHmm(date){ const d=new Date(date); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
     function parseDateFlexible(v){
