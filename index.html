@@ -2,54 +2,40 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Indicadores (Condiciones Chats/Calls/Tickets)</title>
+  <title>Dashboard Asesores — Consolidado con Alias y Grupos</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    /* Modern Light UI (limpio y profesional) */
     :root{
-      --bg: #FFFFFF;
-      --surface: #FAFAFB;
-      --muted: #616160;
-      --text: #231F20;
-      --accent: #F28F17;
-      --card-border: rgba(35,31,32,0.06);
-      --radius: 12px;
-      --shadow: 0 8px 24px rgba(35,31,32,0.06);
+      --bg:#FFFFFF; --surface:#FAFAFB; --muted:#616160; --text:#231F20; --accent:#F28F17;
+      --card-border:rgba(35,31,32,0.06); --radius:12px; --shadow:0 8px 24px rgba(35,31,32,0.06);
     }
-    html,body{
-      height:100%;margin:0;font-family:"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);
-      -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-    }
-    .wrap{max-width:1200px;margin:28px auto;padding:20px;}
+    html,body{height:100%;margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1200px;margin:28px auto;padding:20px}
     header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
     .brand{display:flex;align-items:center;gap:14px}
-    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:22px;box-shadow:0 8px 24px rgba(242,143,23,0.12);}
-    h1{font-size:38px;margin:0;font-weight:700;line-height:1}
-    .subtitle{font-size:16px;color:var(--muted);margin-top:6px}
+    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:22px;box-shadow:0 8px 24px rgba(242,143,23,0.12)}
+    h1{font-size:38px;margin:0;font-weight:700}
+    .subtitle{font-size:14px;color:var(--muted);margin-top:6px}
 
     .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;align-items:end}
-    .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow);}
+    .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow)}
     .control label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px;}
-    .inline {display:flex;gap:8px;align-items:center}
-    input[type="checkbox"]{width:16px;height:16px}
-
-    button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(242,143,23,0.12);}
-    button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer;}
+    input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px}
+    button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer}
 
     .layout{display:grid;grid-template-columns:1fr 360px;gap:18px}
-    @media(max-width:980px){ .layout{grid-template-columns:1fr;} }
+    @media(max-width:980px){.layout{grid-template-columns:1fr}}
 
     .card{background:#fff;border-radius:var(--radius);padding:16px;border:1px solid var(--card-border);box-shadow:var(--shadow)}
     .card h2{margin:0 0 8px 0;font-size:18px;color:var(--muted)}
     .table-wrap{overflow:auto;border-radius:8px;margin-top:12px}
     table{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
-    thead th{text-align:left;padding:14px 12px;color:var(--muted);font-size:13px;font-weight:700;border-bottom:1px solid rgba(35,31,32,0.04);}
+    thead th{text-align:left;padding:14px 12px;color:var(--muted);font-size:13px;font-weight:700;border-bottom:1px solid rgba(35,31,32,0.04)}
     tbody td{padding:12px;border-bottom:1px solid rgba(35,31,32,0.03);vertical-align:middle;color:var(--text)}
     tbody tr:hover{background:linear-gradient(90deg, rgba(242,143,23,0.03), rgba(242,143,23,0.01))}
-    .pos{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;border:1px solid rgba(35,31,32,0.04);}
-    .pos.top{background:linear-gradient(90deg,var(--accent),#ffb86b);color:#000;box-shadow:0 8px 20px rgba(242,143,23,0.08)}
+    .pos{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;border:1px solid rgba(35,31,32,0.04)}
+    .pos.top{background:linear-gradient(90deg,var(--accent),#ffb86b);color:#000}
     .advisor-name{font-weight:700}
     .meta-small{font-size:12px;color:var(--muted)}
     .score{color:var(--accent);font-weight:800;font-size:16px}
@@ -60,7 +46,6 @@
     .stat .label{color:var(--muted);font-size:13px}
     .stat .value{font-weight:800;font-size:20px;color:var(--text)}
     .empty{padding:28px;text-align:center;color:var(--muted)}
-    @media(max-width:600px){ h1{font-size:28px} .logo{width:52px;height:52px;font-size:18px} }
   </style>
 </head>
 <body>
@@ -70,7 +55,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Tickets canalizados · Llamadas completadas >35s · Chats ≤5min y AGENT — filtros por periodo</div>
+          <div class="subtitle">Consolidado por nombre canónico · Grupos · Supervisores</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -102,9 +87,20 @@
       </div>
 
       <div class="control">
-        <label>Filtrar asesor</label>
-        <select id="filterAdvisor">
-          <option value="">Todos los asesores</option>
+        <label>Grupo</label>
+        <select id="groupSelector">
+          <option value="All">Todos (General)</option>
+          <option value="General">General</option>
+          <option value="Vento">Vento</option>
+          <option value="Piston">Piston</option>
+          <option value="Home Office">Home Office</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label>Supervisor</label>
+        <select id="filterSupervisor">
+          <option value="">Todos los supervisores</option>
         </select>
       </div>
 
@@ -115,7 +111,6 @@
     </div>
 
     <main class="layout">
-      <!-- Leaderboard -->
       <section class="card">
         <h2>Leaderboard</h2>
         <div class="table-wrap" role="table" aria-label="Leaderboard table">
@@ -134,41 +129,24 @@
           </table>
         </div>
         <div style="margin-top:12px;color:var(--muted);font-size:13px">
-          Reglas fijas: tickets solo si columna M = <strong>CANALIZADO</strong>. Llamadas solo si columna D = <strong>completed</strong> y duración (col G) &gt; 35s. Chats solo si duración (col C) ≤ 5 minutos y columna M = <strong>AGENT</strong>. Fechas se filtran por columna H (tickets), I (chats) y C (llamadas).
+          Reglas: tickets canalizados (col M = CANALIZADO). Llamadas completed y duración &gt;35s. Chats duración ≤5min y agent flag = AGENT. Nombres consolidados por diccionario Asesores.
         </div>
       </section>
 
-      <!-- Panel lateral -->
       <aside class="side">
         <div class="card">
           <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="stat">
-              <div><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Total</div>
-            </div>
-
-            <div class="stat">
-              <div><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Periodo</div>
-            </div>
-
-            <div class="stat">
-              <div><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Periodo</div>
-            </div>
-
-            <div class="stat">
-              <div><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div>
-              <div style="font-size:12px;color:var(--muted)">Periodo</div>
-            </div>
+            <div class="stat"><div><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div><div style="font-size:12px;color:var(--muted)">Total</div></div>
+            <div class="stat"><div><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div><div style="font-size:12px;color:var(--muted)">Periodo</div></div>
+            <div class="stat"><div><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div><div style="font-size:12px;color:var(--muted)">Periodo</div></div>
+            <div class="stat"><div><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div><div style="font-size:12px;color:var(--muted)">Periodo</div></div>
           </div>
 
           <div style="margin-top:8px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
-              • Chats: columna B (asesor), duración en C debe ser ≤ 5 minutos (formato 1d 1h 1m 1s), y columna M debe ser <strong>AGENT</strong>. Fecha para filtrar está en I.<br>
-              • Llamadas: columna B (asesor), estado en D debe ser <strong>completed</strong>, duración en G &gt; 35s, fecha en C para filtrar.<br>
-              • Tickets: columna E (asesor), estado en M debe ser <strong>CANALIZADO</strong>, fecha en H para filtrar.
+              • Fuente de grupos y supervisores: pestaña <strong>Asesores</strong> (tu hoja).<br>
+              • Nombres se normalizan y se agrupan por el diccionario cargado al inicio.
             </div>
           </div>
         </div>
@@ -178,52 +156,30 @@
 
   <script>
     /******************************************************************
-     * CONFIGURACIÓN
+     * CONFIG
      ******************************************************************/
-    const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
-    const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD' };
+    const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA'; // tu spreadsheet principal
+    const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE'; // hoja con Asesores (la que compartiste)
+    const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD', asesoresSheet: 'Asesores' };
 
     function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
 
-    // Columnas usadas (0-based)
-    // Tickets: asesor E (4), fecha H (7), estado M (12)
-    // Chats: advisor B (1), duration C (2), date I (8), agent flag M (12)
-    // Calls: advisor B (1), date C (2), status D (3), duration G (6)
+    // Column mapping (0-based)
     const COL = {
       tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), status: letterToIndex('M') },
       chats:  { advisor: letterToIndex('B'), duration: letterToIndex('C'), date: letterToIndex('I'), agentFlag: letterToIndex('M') },
-      calls:  { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('G') }
+      calls:  { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('G') },
+      asesores: { supervisor: letterToIndex('C'), username: letterToIndex('D'), group: letterToIndex('E') } // C,D,E
     };
 
     /******************************************************************
-     * UTILIDADES
+     * Estado en memoria: aliasMap y metaMap
      ******************************************************************/
-    function formatHHmm(date){
-      const d = new Date(date);
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    function normalizeName(s){
-      if(s === null || s === undefined) return '';
-      return String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
-    }
-
-    function normalizeStatusLower(s){
-      if(s === null || s === undefined) return '';
-      return String(s).trim().toLowerCase();
-    }
-
-    function normalizeStatusUpper(s){
-      if(s === null || s === undefined) return '';
-      return String(s).trim().toUpperCase();
-    }
+    let aliasMap = {}; // normalized alias -> canonical (Title Case)
+    let metaMap = {};  // canonical -> { group, supervisor }
 
     /******************************************************************
-     * PARSER CSV robusto
+     * UTILIDADES: parse CSV, normalize, titleCase, duration parser
      ******************************************************************/
     function parseCSV(text){
       const rows = [];
@@ -245,48 +201,49 @@
       return rows;
     }
 
-    async function fetchSheetCSVRows(sheetName){
-      const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')');
-      const text = await res.text();
-      return parseCSV(text);
+    function fetchSheetCSVRowsById(spreadsheetId, sheetName){
+      const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+      return fetch(url).then(res => { if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')'); return res.text(); }).then(parseCSV);
     }
 
-    /******************************************************************
-     * Parseo de fecha flexible
-     ******************************************************************/
-    function parseDateFlexible(v){
-      if(v === null || v === undefined) return null;
-      const s = String(v).trim();
-      if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
-      const d1 = new Date(s);
-      if(!isNaN(d1.getTime())) return d1;
-      const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-      if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
-      const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-      if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
-      return null;
+    function normalizeForKey(s){
+      if(s === null || s === undefined) return '';
+      let t = String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').trim();
+      t = t.replace(/[\.\,]/g,''); // quitar puntos/comas
+      t = t.toUpperCase();
+      // eliminar prefijos/sufijos comunes
+      const tokens = ['ATC PISTON','ATC SUP','ATC','SUP','CORD','COORD','ANL','CAP','AGT','AGENTE','SR','SRA'];
+      for(const tk of tokens){
+        const reStart = new RegExp('^\\s*' + tk + '[\\s\\-\\_\\.]*','i');
+        t = t.replace(reStart,'');
+        const reEnd = new RegExp('[\\s\\-\\_\\.]*' + tk + '\\s*$','i');
+        t = t.replace(reEnd,'');
+      }
+      // reordenar "LAST, FIRST" -> "FIRST LAST"
+      if(t.includes(',')){
+        const parts = t.split(',');
+        if(parts.length >= 2){
+          t = (parts[1] + ' ' + parts[0]).trim();
+        }
+      }
+      t = t.replace(/\s+/g,' ').trim();
+      return t;
     }
 
-    /******************************************************************
-     * Parseo de duración con formato "1d 1h 1m 1s" -> segundos
-     * Acepta variantes como "1h 2m", "45s", "2m 10s", "1d", etc.
-     ******************************************************************/
+    function titleCase(s){
+      if(!s) return s;
+      return s.toLowerCase().split(' ').map(w => w ? (w[0].toUpperCase() + w.slice(1)) : '').join(' ');
+    }
+
     function durationToSeconds(s){
       if(s === null || s === undefined) return 0;
       const str = String(s).trim().toLowerCase();
       if(!str) return 0;
       let total = 0;
-      const mD = str.match(/(\d+)\s*d/);
-      if(mD) total += parseInt(mD[1],10) * 86400;
-      const mH = str.match(/(\d+)\s*h/);
-      if(mH) total += parseInt(mH[1],10) * 3600;
-      const mM = str.match(/(\d+)\s*m/);
-      if(mM) total += parseInt(mM[1],10) * 60;
-      const mS = str.match(/(\d+)\s*s/);
-      if(mS) total += parseInt(mS[1],10);
-      // Si no se detectó ninguna letra, intentar parsear como segundos numéricos
+      const mD = str.match(/(\d+)\s*d/); if(mD) total += parseInt(mD[1],10) * 86400;
+      const mH = str.match(/(\d+)\s*h/); if(mH) total += parseInt(mH[1],10) * 3600;
+      const mM = str.match(/(\d+)\s*m/); if(mM) total += parseInt(mM[1],10) * 60;
+      const mS = str.match(/(\d+)\s*s/); if(mS) total += parseInt(mS[1],10);
       if(total === 0){
         const onlyNum = str.match(/^(\d+)$/);
         if(onlyNum) total = parseInt(onlyNum[1],10);
@@ -295,43 +252,69 @@
     }
 
     /******************************************************************
-     * Obtiene rango de fechas según selector de periodo
+     * Construir aliasMap y metaMap desde la pestaña Asesores
+     * - lee filas y toma columnas C (supervisor), D (username), E (group)
      ******************************************************************/
-    function getPeriodRange(){
-      const sel = document.getElementById('periodSelector').value;
-      const today = new Date();
-      let fromDateOnly = null, toDateOnly = null;
-
-      if(sel === 'today'){
-        fromDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        toDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      } else if(sel === 'thisMonth'){
-        fromDateOnly = new Date(today.getFullYear(), today.getMonth(), 1);
-        toDateOnly = new Date(today.getFullYear(), today.getMonth()+1, 0);
-      } else if(sel === 'lastMonth'){
-        const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth()-1, 1);
-        const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-        fromDateOnly = firstDayLastMonth;
-        toDateOnly = lastDayLastMonth;
-      } else {
-        // personalizado: leer inputs
-        const fromVal = document.getElementById('dateFrom').value;
-        const toVal   = document.getElementById('dateTo').value;
-        fromDateOnly = fromVal ? new Date(fromVal + 'T00:00:00') : null;
-        toDateOnly   = toVal   ? new Date(toVal + 'T23:59:59') : null;
-        if(fromDateOnly) fromDateOnly = new Date(fromDateOnly.getFullYear(), fromDateOnly.getMonth(), fromDateOnly.getDate());
-        if(toDateOnly) toDateOnly = new Date(toDateOnly.getFullYear(), toDateOnly.getMonth(), toDateOnly.getDate());
+    async function buildAliasAndMetaMaps(){
+      aliasMap = {};
+      metaMap = {};
+      try{
+        const rows = await fetchSheetCSVRowsById(ASSESSORS_SPREADSHEET_ID, SHEETS.asesoresSheet);
+        // rows is array of arrays; iterate and pick rows where username (col D) exists
+        for(let r=0; r<rows.length; r++){
+          const row = rows[r];
+          const rawUser = (row[COL.asesores.username] || '').trim();
+          const rawGroup = (row[COL.asesores.group] || '').trim();
+          const rawSupervisor = (row[COL.asesores.supervisor] || '').trim();
+          if(!rawUser) continue;
+          const keyNorm = normalizeForKey(rawUser);
+          const canonical = titleCase(keyNorm);
+          const group = rawGroup ? rawGroup : 'General';
+          const supervisor = rawSupervisor ? rawSupervisor : '';
+          // store meta
+          metaMap[canonical] = { group, supervisor };
+          // map alias: normalized username -> canonical
+          aliasMap[keyNorm] = canonical;
+          // also map the rawUser uppercase trimmed to canonical (defensive)
+          aliasMap[normalizeForKey(rawUser.replace(/\s+/g,' '))] = canonical;
+        }
+        // Optionally log
+        console.log('aliasMap built, entries:', Object.keys(aliasMap).length);
+        console.log('metaMap built, entries:', Object.keys(metaMap).length);
+      } catch(err){
+        console.warn('No se pudo cargar Asesores sheet:', err.message);
       }
-      return { fromDateOnly, toDateOnly };
     }
 
     /******************************************************************
-     * Agregación de conteos por asesor con condiciones:
-     * - Tickets: solo si status (col M) === "CANALIZADO"
-     * - Calls: solo si status (col D) === "completed" AND duration (col G) > 35s
-     * - Chats: solo si duration (col C) <= 300s AND agentFlag (col M) === "AGENT"
+     * Mapear un raw advisor a canonical usando aliasMap y metaMap
      ******************************************************************/
-    function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
+    function mapAdvisorToCanonical(raw){
+      const norm = normalizeForKey(raw);
+      if(!norm) return '';
+      if(aliasMap[norm]) return aliasMap[norm];
+      // fallback: try exact match on canonical keys (case-insensitive)
+      const candidates = Object.keys(metaMap);
+      const found = candidates.find(c => c.toUpperCase() === norm.toUpperCase());
+      if(found) return found;
+      // else use normalized title-case as canonical and default group General
+      const canonical = titleCase(norm);
+      if(!metaMap[canonical]) metaMap[canonical] = { group: 'General', supervisor: '' };
+      aliasMap[norm] = canonical;
+      return canonical;
+    }
+
+    /******************************************************************
+     * Fetch CSV helper for main sheets (uses main spreadsheet id)
+     ******************************************************************/
+    async function fetchMainSheetRows(sheetName){
+      return fetchSheetCSVRowsById(SPREADSHEET_ID, sheetName);
+    }
+
+    /******************************************************************
+     * Agregación de conteos (usa canonical names)
+     ******************************************************************/
+    function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
       const counts = {};
       function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
       function inRangeDate(d, from, to){
@@ -343,103 +326,96 @@
       }
       function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
 
-      // Tickets: contar solo si status === "CANALIZADO"
+      // Tickets: only if status === CANALIZADO
       for(let r=1; r<ticketsRows.length; r++){
         const row = ticketsRows[r];
         const rawAdvisor = cell(row, COL.tickets.advisor);
-        const advisor = normalizeName(rawAdvisor);
-        if(!advisor) continue;
+        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+        if(!advisorCanonical) continue;
+        const meta = metaMap[advisorCanonical] || { group: 'General', supervisor: '' };
+        if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
+        if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
 
         const rawStatus = cell(row, COL.tickets.status);
-        const status = normalizeStatusUpper(rawStatus);
-        if(status !== 'CANALIZADO') continue; // condición fija: solo canalizados
+        const status = String(rawStatus || '').trim().toUpperCase();
+        if(status !== 'CANALIZADO') continue;
 
         const rawDate = cell(row, COL.tickets.date);
         const parsed = parseDateFlexible(rawDate);
-
         if((filterFrom || filterTo) && parsed){
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
-        ensure(advisor);
-        counts[advisor].tickets += 1;
+        ensure(advisorCanonical);
+        counts[advisorCanonical].tickets += 1;
       }
 
-      // Chats: aplicar condiciones
-      // - duration en columna C debe ser <= 300 segundos (5 minutos)
-      // - agentFlag en columna M debe ser "AGENT" (case-insensitive)
-      // - fecha en columna I se usa para filtrar si aplica
+      // Chats: duration col C <= 300s and agentFlag col M === AGENT
       for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
         const rawAdvisor = cell(row, COL.chats.advisor);
-        const advisor = normalizeName(rawAdvisor);
-        if(!advisor) continue;
+        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+        if(!advisorCanonical) continue;
+        const meta = metaMap[advisorCanonical] || { group: 'General', supervisor: '' };
+        if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
+        if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
 
-        // Duración en C
         const rawDuration = cell(row, COL.chats.duration);
         const seconds = durationToSeconds(rawDuration);
-        if(seconds === 0 && String(rawDuration || '').trim() === '') {
-          // Si no hay duración, no contamos (regla estricta)
-          continue;
-        }
-        if(seconds > 300) continue; // mayor a 5 minutos -> excluir
+        if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
+        if(seconds > 300) continue;
 
-        // Agent flag en M debe ser "AGENT"
         const rawAgent = cell(row, COL.chats.agentFlag);
-        const agentFlag = normalizeStatusUpper(rawAgent);
+        const agentFlag = String(rawAgent || '').trim().toUpperCase();
         if(agentFlag !== 'AGENT') continue;
 
-        // Fecha en I para filtrar por periodo si aplica
         const rawDate = cell(row, COL.chats.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
-          if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
+          if(!parsed) continue;
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
-
-        ensure(advisor);
-        counts[advisor].chats += 1;
+        ensure(advisorCanonical);
+        counts[advisorCanonical].chats += 1;
       }
 
-      // Calls: aplicar condiciones
+      // Calls: status D === completed and duration G > 35s
       for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
         const rawAdvisor = cell(row, COL.calls.advisor);
-        const advisor = normalizeName(rawAdvisor);
-        if(!advisor) continue;
+        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+        if(!advisorCanonical) continue;
+        const meta = metaMap[advisorCanonical] || { group: 'General', supervisor: '' };
+        if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
+        if(selectedSupervisor && meta.supervisor !== selectedSupervisor) continue;
 
-        // Estado en columna D debe ser "completed" (case-insensitive)
         const rawStatus = cell(row, COL.calls.status);
-        const status = normalizeStatusLower(rawStatus);
+        const status = String(rawStatus || '').trim().toLowerCase();
         if(status !== 'completed') continue;
 
-        // Duración en columna G debe ser > 35 segundos
         const rawDuration = cell(row, COL.calls.duration);
         const seconds = durationToSeconds(rawDuration);
         if(seconds <= 35) continue;
 
-        // Fecha en columna C para filtrar por periodo si aplica
         const rawDate = cell(row, COL.calls.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
-          if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
+          if(!parsed) continue;
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
-
-        ensure(advisor);
-        counts[advisor].calls += 1;
+        ensure(advisorCanonical);
+        counts[advisorCanonical].calls += 1;
       }
 
       return counts;
     }
 
     /******************************************************************
-     * Cálculo de puntajes proporcionales
+     * Score calculation and rendering (same as before)
      ******************************************************************/
     function calculateScoresFromCounts(countsObj){
       const counts = countsObj;
       const advisors = Object.keys(counts);
       if(advisors.length === 0) return [];
-
       let maxTickets = 0, maxCalls = 0, maxChats = 0;
       advisors.forEach(name => {
         const c = counts[name];
@@ -447,7 +423,6 @@
         if(c.calls > maxCalls) maxCalls = c.calls;
         if(c.chats > maxChats) maxChats = c.chats;
       });
-
       const arr = advisors.map(name => {
         const c = counts[name];
         const ticketPts = maxTickets ? (c.tickets / maxTickets) * 100 : 0;
@@ -465,15 +440,11 @@
           total: Number(total.toFixed(2))
         };
       });
-
       arr.sort((a,b) => b.total - a.total);
       return arr;
     }
 
-    /******************************************************************
-     * Renderizado
-     ******************************************************************/
-    function renderLeaderboard(scores, advisorFilter = ''){
+    function renderLeaderboard(scores){
       const tbody = document.querySelector('#leaderboardTable tbody');
       tbody.innerHTML = '';
       if(scores.length === 0){
@@ -481,14 +452,13 @@
         return;
       }
       scores.forEach((row, idx) => {
-        if(advisorFilter && row.name !== advisorFilter) return;
         const tr = document.createElement('tr');
         const posClass = idx === 0 ? 'pos top' : 'pos';
         tr.innerHTML = `
           <td><div class="${posClass}">${idx+1}</div></td>
           <td>
             <div class="advisor-name">${escapeHtml(row.name)}</div>
-            <div class="meta-small">Asesor</div>
+            <div class="meta-small">${metaMap[row.name] ? metaMap[row.name].group + ' · ' + (metaMap[row.name].supervisor || '') : ''}</div>
           </td>
           <td><div class="vol">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
           <td><div class="vol">${row.calls}</div><div class="meta-small">${row.callPts} pts</div></td>
@@ -499,14 +469,13 @@
       });
     }
 
-    function populateAdvisorFilter(scores){
-      const sel = document.getElementById('filterAdvisor');
+    function populateSupervisorFilter(){
+      const sel = document.getElementById('filterSupervisor');
       sel.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
-      scores.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.name;
-        opt.textContent = s.name;
-        sel.appendChild(opt);
+      const supervisors = new Set();
+      Object.values(metaMap).forEach(m => { if(m.supervisor) supervisors.add(m.supervisor); });
+      Array.from(supervisors).sort().forEach(sup => {
+        const opt = document.createElement('option'); opt.value = sup; opt.textContent = sup; sel.appendChild(opt);
       });
     }
 
@@ -522,39 +491,73 @@
     }
 
     /******************************************************************
-     * Flujo principal
+     * Period helper
+     ******************************************************************/
+    function getPeriodRange(){
+      const sel = document.getElementById('periodSelector').value;
+      const today = new Date();
+      let fromDateOnly = null, toDateOnly = null;
+      if(sel === 'today'){
+        fromDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        toDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      } else if(sel === 'thisMonth'){
+        fromDateOnly = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDateOnly = new Date(today.getFullYear(), today.getMonth()+1, 0);
+      } else if(sel === 'lastMonth'){
+        const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth()-1, 1);
+        const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+        fromDateOnly = firstDayLastMonth;
+        toDateOnly = lastDayLastMonth;
+      } else {
+        const fromVal = document.getElementById('dateFrom').value;
+        const toVal   = document.getElementById('dateTo').value;
+        fromDateOnly = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+        toDateOnly   = toVal   ? new Date(toVal + 'T23:59:59') : null;
+        if(fromDateOnly) fromDateOnly = new Date(fromDateOnly.getFullYear(), fromDateOnly.getMonth(), fromDateOnly.getDate());
+        if(toDateOnly) toDateOnly = new Date(toDateOnly.getFullYear(), toDateOnly.getMonth(), toDateOnly.getDate());
+      }
+      return { fromDateOnly, toDateOnly };
+    }
+
+    /******************************************************************
+     * Main flow: load asesores mapping first, then main sheets
      ******************************************************************/
     let cache = { tickets:[], chats:[], calls:[] };
 
     async function loadAndRender(){
       try{
         document.getElementById('lastSync').textContent = formatHHmm(new Date());
+        // 1) build alias/meta maps from Asesores sheet (external spreadsheet)
+        await buildAliasAndMetaMaps();
+        populateSupervisorFilter();
+
+        // 2) fetch main sheets
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
-          fetchSheetCSVRows(SHEETS.tickets),
-          fetchSheetCSVRows(SHEETS.chats),
-          fetchSheetCSVRows(SHEETS.calls)
+          fetchMainSheetRows(SHEETS.tickets),
+          fetchMainSheetRows(SHEETS.chats),
+          fetchMainSheetRows(SHEETS.calls)
         ]);
         cache.tickets = ticketsRows;
         cache.chats = chatsRows;
         cache.calls = callsRows;
+
         applyFiltersAndRender();
       } catch(err){
         console.error(err);
-        alert('Error al cargar datos: ' + err.message + '. Revisa permisos de la hoja o la consola.');
+        alert('Error al cargar datos: ' + err.message + '. Revisa permisos de las hojas o la consola.');
       }
     }
 
     function applyFiltersAndRender(){
       const { fromDateOnly, toDateOnly } = getPeriodRange();
+      const selectedGroup = document.getElementById('groupSelector').value || 'All';
+      const selectedSupervisor = document.getElementById('filterSupervisor').value || '';
 
-      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly);
+      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, selectedGroup, selectedSupervisor);
       const scores = calculateScoresFromCounts(counts);
 
-      populateAdvisorFilter(scores);
       updateSideStats(counts);
-
-      const advisorFilter = document.getElementById('filterAdvisor').value || '';
-      renderLeaderboard(scores, advisorFilter);
+      renderLeaderboard(scores);
     }
 
     document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
@@ -568,40 +571,29 @@
       }
       applyFiltersAndRender();
     });
-    document.getElementById('filterAdvisor').addEventListener('change', () => applyFiltersAndRender());
+    document.getElementById('groupSelector').addEventListener('change', () => applyFiltersAndRender());
+    document.getElementById('filterSupervisor').addEventListener('change', () => applyFiltersAndRender());
 
-    // Inicializar
+    // init
     loadAndRender();
 
     /******************************************************************
-     * Auxiliares: fetch CSV y parseo
+     * Aux helpers
      ******************************************************************/
-    async function fetchSheetCSVRows(sheetName){
-      const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')');
-      const text = await res.text();
-      return parseCSV(text);
+    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function formatHHmm(date){ const d=new Date(date); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+    function parseDateFlexible(v){
+      if(v === null || v === undefined) return null;
+      const s = String(v).trim();
+      if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
+      const d1 = new Date(s);
+      if(!isNaN(d1.getTime())) return d1;
+      const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
+      const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
+      return null;
     }
-
-    function formatHHmm(date){
-      const d = new Date(date);
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    /******************************************************************
-     * Comentarios finales
-     *
-     * - Chats: condición fija aplicada — duración en columna C debe ser ≤ 300 segundos
-     *   (5 minutos) y la columna M debe ser "AGENT" (case-insensitive). Fecha de chat
-     *   para filtrar está en la columna I; si hay filtro y no hay fecha, el chat no se cuenta.
-     * - Llamadas: condición fija aplicada — columna D debe ser "completed" y duración en G > 35s.
-     * - Tickets: condición fija — columna M debe ser "CANALIZADO".
-     * - Si quieres cambiar la regla sobre cómo tratar filas sin fecha (por ejemplo, excluir
-     *   tickets canalizados sin fecha cuando se aplica un periodo), lo ajusto en la próxima versión.
-     ******************************************************************/
   </script>
 </body>
 </html>
