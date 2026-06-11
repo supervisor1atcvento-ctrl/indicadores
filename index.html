@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Consolidado con Tabs de Grupo</title>
+  <title>Dashboard Asesores — Detalles protegidos</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
@@ -25,12 +25,8 @@
     button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
     button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer}
 
-    /* Tabs */
     .tabs{display:flex;gap:8px;margin:12px 0 18px 0}
-    .tab{
-      background:var(--tab-bg);border:1px solid var(--tab-border);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:700;color:var(--muted);
-      transition:all .12s ease;
-    }
+    .tab{background:var(--tab-bg);border:1px solid var(--tab-border);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:700;color:var(--muted);transition:all .12s ease}
     .tab:hover{transform:translateY(-2px)}
     .tab.active{background:var(--tab-active);color:var(--text);box-shadow:var(--shadow);border-color:rgba(35,31,32,0.06)}
 
@@ -49,13 +45,21 @@
     .advisor-name{font-weight:700}
     .meta-small{font-size:12px;color:var(--muted)}
     .score{color:var(--accent);font-weight:800;font-size:16px}
-    .vol{color:var(--muted);font-weight:700}
+    .vol{color:var(--muted);font-weight:700;cursor:pointer;text-decoration:underline}
 
     .side .card{display:flex;flex-direction:column;gap:12px}
     .stat{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(35,31,32,0.03)}
     .stat .label{color:var(--muted);font-size:13px}
     .stat .value{font-weight:800;font-size:20px;color:var(--text)}
     .empty{padding:28px;text-align:center;color:var(--muted)}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:9999}
+    .modal{background:#fff;border-radius:12px;padding:18px;max-width:920px;width:94%;max-height:86vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+    .modal h3{margin:0 0 8px 0}
+    .modal .close{float:right;background:transparent;border:none;font-weight:800;font-size:18px;cursor:pointer}
+    .secret-prompt{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    .small-muted{font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -65,7 +69,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Consolidado por nombre canónico · Grupos · Supervisores</div>
+          <div class="subtitle">Suma de puntajes · Detalles protegidos por código</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -154,9 +158,8 @@
           <div style="margin-top:8px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
-              • Fuente de grupos y supervisores: pestaña <strong>Asesores</strong> (tu hoja).<br>
-              • Si una fila en Asesores no tiene grupo, se asigna automáticamente a <strong>OTROS</strong>.<br>
-              • Nuevo grupo añadido: <strong>Nuevo ingreso</strong>.
+              • Para ver detalles (tickets/chats/llamadas) haz clic en la cantidad; se requiere código <strong>SUPER</strong> para acceder.<br>
+              • Si una fila en Asesores no tiene grupo, se asigna automáticamente a <strong>OTROS</strong>.
             </div>
           </div>
         </div>
@@ -164,9 +167,37 @@
     </main>
   </div>
 
+  <!-- Modal backdrop -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <button class="close" id="modalClose">&times;</button>
+      <h3 id="modalTitle">Detalles</h3>
+
+      <div id="authArea" class="secret-prompt">
+        <div class="small-muted">Introduce código para ver detalles:</div>
+        <input id="secretInput" type="password" placeholder="Código" style="padding:8px;border-radius:8px;border:1px solid #ddd">
+        <button id="secretBtn" class="primary">Validar</button>
+        <div id="authMsg" class="small-muted" style="margin-left:8px"></div>
+      </div>
+
+      <div id="detailsArea" style="display:none">
+        <div style="margin-bottom:10px"><strong id="detailsHeader"></strong></div>
+        <div class="table-wrap" style="max-height:56vh;overflow:auto">
+          <table id="detailsTable">
+            <thead>
+              <tr><th>Tipo</th><th>Fecha</th><th>Asesor</th><th>Estado / Agent</th><th>Duración</th><th>Info</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script>
     /******************************************************************
-     * CONFIG
+     * CONFIG y mapeos (igual que antes)
      ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
     const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE';
@@ -183,7 +214,11 @@
 
     let aliasMap = {};
     let metaMap = {};
+    let cache = { tickets:[], chats:[], calls:[] };
 
+    /******************************************************************
+     * CSV parser y utilidades
+     ******************************************************************/
     function parseCSV(text){
       const rows = [];
       let cur = '', row = [], inQuotes = false;
@@ -252,6 +287,22 @@
       return total;
     }
 
+    function parseDateFlexible(v){
+      if(v === null || v === undefined) return null;
+      const s = String(v).trim();
+      if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
+      const d1 = new Date(s);
+      if(!isNaN(d1.getTime())) return d1;
+      const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
+      const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
+      return null;
+    }
+
+    /******************************************************************
+     * Construir aliasMap y metaMap desde Asesores
+     ******************************************************************/
     async function buildAliasAndMetaMaps(){
       aliasMap = {};
       metaMap = {};
@@ -265,10 +316,8 @@
           if(!rawUser) continue;
           const keyNorm = normalizeForKey(rawUser);
           const canonical = titleCase(keyNorm);
-          // if no group -> OTROS
           const group = rawGroup ? rawGroup : 'OTROS';
-          // normalize supervisor to title case if present, else OTROS
-          const supervisor = rawSupervisor ? titleCase(rawSupervisor) : 'OTROS';
+          const supervisor = rawSupervisor ? rawSupervisor.toUpperCase() : 'OTROS';
           metaMap[canonical] = { group, supervisor };
           aliasMap[keyNorm] = canonical;
           aliasMap[normalizeForKey(rawUser.replace(/\s+/g,' '))] = canonical;
@@ -291,13 +340,14 @@
       return canonical;
     }
 
-    async function fetchMainSheetRows(sheetName){
-      return fetchSheetCSVRowsById(SPREADSHEET_ID, sheetName);
-    }
-
-    function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
+    /******************************************************************
+     * Agregación con almacenamiento de listas de detalle por asesor
+     * - Además de counts, guardamos arrays: details[canonical] = { tickets:[], chats:[], calls:[] }
+     ******************************************************************/
+    function aggregateCountsAndDetails(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
       const counts = {};
-      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
+      const details = {}; // canonical -> { tickets:[], chats:[], calls:[] }
+      function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; if(!details[name]) details[name] = { tickets:[], chats:[], calls:[] }; }
       function inRangeDate(d, from, to){
         if(!d) return false;
         const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -307,6 +357,7 @@
       }
       function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
 
+      // Tickets
       for(let r=1; r<ticketsRows.length; r++){
         const row = ticketsRows[r];
         const rawAdvisor = cell(row, COL.tickets.advisor);
@@ -315,7 +366,6 @@
         const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
         if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
         if(selectedSupervisor){
-          // compare uppercase to be robust
           if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
         }
         const rawStatus = cell(row, COL.tickets.status);
@@ -328,8 +378,17 @@
         }
         ensure(advisorCanonical);
         counts[advisorCanonical].tickets += 1;
+        details[advisorCanonical].tickets.push({
+          tipo: 'Ticket',
+          fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
+          asesor_raw: rawAdvisor,
+          estado: rawStatus || '',
+          duracion: '',
+          info: row.join(' | ')
+        });
       }
 
+      // Chats
       for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
         const rawAdvisor = cell(row, COL.chats.advisor);
@@ -355,8 +414,17 @@
         }
         ensure(advisorCanonical);
         counts[advisorCanonical].chats += 1;
+        details[advisorCanonical].chats.push({
+          tipo: 'Chat',
+          fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
+          asesor_raw: rawAdvisor,
+          estado: agentFlag,
+          duracion: rawDuration || '',
+          info: row.join(' | ')
+        });
       }
 
+      // Calls
       for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
         const rawAdvisor = cell(row, COL.calls.advisor);
@@ -381,12 +449,25 @@
         }
         ensure(advisorCanonical);
         counts[advisorCanonical].calls += 1;
+        details[advisorCanonical].calls.push({
+          tipo: 'Llamada',
+          fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
+          asesor_raw: rawAdvisor,
+          estado: rawStatus || '',
+          duracion: rawDuration || '',
+          info: row.join(' | ')
+        });
       }
 
-      return counts;
+      return { counts, details };
     }
 
-    function calculateScoresFromCounts(countsObj){
+    /******************************************************************
+     * Cálculo de puntajes: ahora SUMA de puntos (no promedio)
+     * - Cada canal: 100 pts al máximo proporcional al máximo del canal
+     * - Puntaje total = ticketPts + callPts + chatPts (suma)
+     ******************************************************************/
+    function calculateScoresFromCountsSum(countsObj){
       const counts = countsObj;
       const advisors = Object.keys(counts);
       if(advisors.length === 0) return [];
@@ -402,7 +483,7 @@
         const ticketPts = maxTickets ? (c.tickets / maxTickets) * 100 : 0;
         const callPts   = maxCalls   ? (c.calls   / maxCalls)   * 100 : 0;
         const chatPts   = maxChats   ? (c.chats   / maxChats)   * 100 : 0;
-        const total = (ticketPts + callPts + chatPts) / 3;
+        const total = ticketPts + callPts + chatPts; // SUMA en lugar de promedio
         return {
           name,
           tickets: c.tickets,
@@ -418,7 +499,10 @@
       return arr;
     }
 
-    function renderLeaderboard(scores){
+    /******************************************************************
+     * Renderizado y eventos: ahora las celdas de cantidad son clicables
+     ******************************************************************/
+    function renderLeaderboard(scores, details){
       const tbody = document.querySelector('#leaderboardTable tbody');
       tbody.innerHTML = '';
       if(scores.length === 0){
@@ -434,45 +518,125 @@
             <div class="advisor-name">${escapeHtml(row.name)}</div>
             <div class="meta-small">${metaMap[row.name] ? metaMap[row.name].group + ' · ' + (metaMap[row.name].supervisor || '') : ''}</div>
           </td>
-          <td><div class="vol">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
-          <td><div class="vol">${row.calls}</div><div class="meta-small">${row.callPts} pts</div></td>
-          <td><div class="vol">${row.chats}</div><div class="meta-small">${row.chatPts} pts</div></td>
+          <td><div class="vol count-cell" data-type="tickets" data-name="${escapeHtml(row.name)}">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
+          <td><div class="vol count-cell" data-type="calls" data-name="${escapeHtml(row.name)}">${row.calls}</div><div class="meta-small">${row.callPts} pts</div></td>
+          <td><div class="vol count-cell" data-type="chats" data-name="${escapeHtml(row.name)}">${row.chats}</div><div class="meta-small">${row.chatPts} pts</div></td>
           <td class="score">${row.total}</td>
         `;
         tbody.appendChild(tr);
       });
-    }
 
-    function populateSupervisorFilter(){
-      const sel = document.getElementById('filterSupervisor');
-      sel.innerHTML = '';
-      // Fixed options as requested
-      const fixedOptions = [
-        "IVAN GERARDO MORENO GARATACHEA",
-        "CECILIA CARRERA MORALES",
-        "OTROS"
-      ];
-      const firstOpt = document.createElement('option');
-      firstOpt.value = '';
-      firstOpt.textContent = 'Todos los supervisores';
-      sel.appendChild(firstOpt);
-      fixedOptions.forEach(sup => {
-        const opt = document.createElement('option');
-        opt.value = sup;
-        opt.textContent = sup;
-        sel.appendChild(opt);
+      // attach click handlers to count cells
+      document.querySelectorAll('.count-cell').forEach(el => {
+        el.addEventListener('click', async (e) => {
+          const type = el.getAttribute('data-type'); // tickets|calls|chats
+          const name = el.getAttribute('data-name');
+          await tryShowDetails(name, type, details);
+        });
       });
     }
 
-    function updateSideStats(counts){
-      const advisors = Object.keys(counts).length;
-      const totalTickets = Object.values(counts).reduce((s,c)=>s+(c.tickets||0),0);
-      const totalCalls = Object.values(counts).reduce((s,c)=>s+(c.calls||0),0);
-      const totalChats = Object.values(counts).reduce((s,c)=>s+(c.chats||0),0);
-      document.getElementById('statAdvisors').textContent = advisors;
-      document.getElementById('statTickets').textContent = totalTickets;
-      document.getElementById('statCalls').textContent = totalCalls;
-      document.getElementById('statChats').textContent = totalChats;
+    /******************************************************************
+     * Modal + auth logic
+     ******************************************************************/
+    const SECRET_CODE = 'SUPER'; // código requerido
+    function showModal(){
+      document.getElementById('modalBackdrop').style.display = 'flex';
+    }
+    function hideModal(){
+      document.getElementById('modalBackdrop').style.display = 'none';
+      // reset auth UI
+      document.getElementById('authArea').style.display = 'flex';
+      document.getElementById('detailsArea').style.display = 'none';
+      document.getElementById('secretInput').value = '';
+      document.getElementById('authMsg').textContent = '';
+      document.getElementById('detailsTable').querySelector('tbody').innerHTML = '';
+    }
+    document.getElementById('modalClose').addEventListener('click', hideModal);
+    document.getElementById('modalBackdrop').addEventListener('click', (e) => { if(e.target.id === 'modalBackdrop') hideModal(); });
+
+    // check session (if user already validated in this tab)
+    function isAuthorized(){
+      try{ return sessionStorage.getItem('authorized') === '1'; } catch(e){ return false; }
+    }
+    function setAuthorized(){
+      try{ sessionStorage.setItem('authorized','1'); } catch(e){}
+    }
+
+    async function tryShowDetails(canonicalName, type, details){
+      // details is the object returned by aggregateCountsAndDetails
+      showModal();
+      document.getElementById('modalTitle').textContent = `Detalles: ${canonicalName} — ${type}`;
+      // if already authorized, show immediately
+      if(isAuthorized()){
+        renderDetailsTable(canonicalName, type, details);
+        return;
+      }
+      // else wait for validation
+      document.getElementById('authArea').style.display = 'flex';
+      document.getElementById('detailsArea').style.display = 'none';
+      document.getElementById('authMsg').textContent = '';
+      // attach handler for secretBtn
+      const secretBtn = document.getElementById('secretBtn');
+      const secretInput = document.getElementById('secretInput');
+      const handler = () => {
+        const val = (secretInput.value || '').trim();
+        if(val === SECRET_CODE){
+          setAuthorized();
+          document.getElementById('authMsg').textContent = 'Acceso concedido';
+          renderDetailsTable(canonicalName, type, details);
+          secretBtn.removeEventListener('click', handler);
+        } else {
+          document.getElementById('authMsg').textContent = 'Código incorrecto';
+        }
+      };
+      secretBtn.removeEventListener('click', handler); // safe
+      secretBtn.addEventListener('click', handler);
+      // allow Enter key
+      secretInput.addEventListener('keydown', function onKey(e){
+        if(e.key === 'Enter'){ handler(); secretInput.removeEventListener('keydown', onKey); }
+      });
+    }
+
+    function renderDetailsTable(canonicalName, type, details){
+      document.getElementById('authArea').style.display = 'none';
+      document.getElementById('detailsArea').style.display = 'block';
+      document.getElementById('detailsHeader').textContent = `${canonicalName} — ${type}`;
+      const tbody = document.getElementById('detailsTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      const list = (details[canonicalName] && details[canonicalName][type]) ? details[canonicalName][type] : [];
+      if(!list || list.length === 0){
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay registros para mostrar</td></tr>';
+        return;
+      }
+      list.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(item.tipo)}</td><td>${escapeHtml(item.fecha)}</td><td>${escapeHtml(item.asesor_raw)}</td><td>${escapeHtml(item.estado)}</td><td>${escapeHtml(item.duracion)}</td><td>${escapeHtml(item.info)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /******************************************************************
+     * Main flow
+     ******************************************************************/
+    async function loadAndRender(){
+      try{
+        document.getElementById('lastSync').textContent = formatHHmm(new Date());
+        await buildAliasAndMetaMaps();
+        populateSupervisorFilter();
+        const [ticketsRows, chatsRows, callsRows] = await Promise.all([
+          fetchMainSheetRows(SHEETS.tickets),
+          fetchMainSheetRows(SHEETS.chats),
+          fetchMainSheetRows(SHEETS.calls)
+        ]);
+        cache.tickets = ticketsRows;
+        cache.chats = chatsRows;
+        cache.calls = callsRows;
+        applyFiltersAndRender();
+      } catch(err){
+        console.error(err);
+        alert('Error al cargar datos: ' + err.message + '. Revisa permisos de las hojas o la consola.');
+      }
     }
 
     function getPeriodRange(){
@@ -501,38 +665,34 @@
       return { fromDateOnly, toDateOnly };
     }
 
-    let cache = { tickets:[], chats:[], calls:[] };
-    let activeGroup = 'All';
-
-    async function loadAndRender(){
-      try{
-        document.getElementById('lastSync').textContent = formatHHmm(new Date());
-        await buildAliasAndMetaMaps();
-        populateSupervisorFilter();
-        const [ticketsRows, chatsRows, callsRows] = await Promise.all([
-          fetchMainSheetRows(SHEETS.tickets),
-          fetchMainSheetRows(SHEETS.chats),
-          fetchMainSheetRows(SHEETS.calls)
-        ]);
-        cache.tickets = ticketsRows;
-        cache.chats = chatsRows;
-        cache.calls = callsRows;
-        applyFiltersAndRender();
-      } catch(err){
-        console.error(err);
-        alert('Error al cargar datos: ' + err.message + '. Revisa permisos de las hojas o la consola.');
-      }
+    function populateSupervisorFilter(){
+      const sel = document.getElementById('filterSupervisor');
+      sel.innerHTML = '';
+      const firstOpt = document.createElement('option');
+      firstOpt.value = '';
+      firstOpt.textContent = 'Todos los supervisores';
+      sel.appendChild(firstOpt);
+      const fixedOptions = [
+        "IVAN GERARDO MORENO GARATACHEA",
+        "CECILIA CARRERA MORALES",
+        "OTROS"
+      ];
+      fixedOptions.forEach(sup => {
+        const opt = document.createElement('option');
+        opt.value = sup;
+        opt.textContent = sup;
+        sel.appendChild(opt);
+      });
     }
 
     function applyFiltersAndRender(){
       const { fromDateOnly, toDateOnly } = getPeriodRange();
       const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
-      // selectedSupervisorRaw may be one of the fixed options or empty
       const selectedSupervisor = selectedSupervisorRaw || '';
-      const counts = aggregateCountsCSV(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, activeGroup, selectedSupervisor);
-      const scores = calculateScoresFromCounts(counts);
+      const { counts, details } = aggregateCountsAndDetails(cache.tickets, cache.chats, cache.calls, fromDateOnly, toDateOnly, activeGroup, selectedSupervisor);
+      const scores = calculateScoresFromCountsSum(counts);
       updateSideStats(counts);
-      renderLeaderboard(scores);
+      renderLeaderboard(scores, details);
     }
 
     document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
@@ -549,6 +709,7 @@
     document.getElementById('filterSupervisor').addEventListener('change', () => applyFiltersAndRender());
 
     // Tabs behavior
+    let activeGroup = 'All';
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -561,20 +722,11 @@
     // init
     loadAndRender();
 
+    /******************************************************************
+     * Aux helpers
+     ******************************************************************/
     function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function formatHHmm(date){ const d=new Date(date); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
-    function parseDateFlexible(v){
-      if(v === null || v === undefined) return null;
-      const s = String(v).trim();
-      if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
-      const d1 = new Date(s);
-      if(!isNaN(d1.getTime())) return d1;
-      const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-      if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
-      const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-      if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
-      return null;
-    }
   </script>
 </body>
 </html>
