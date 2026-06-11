@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Indicadores (Condiciones Calls)</title>
+  <title>Dashboard Asesores — Indicadores (Condiciones Chats/Calls/Tickets)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     /* Modern Light UI (limpio y profesional) */
@@ -70,7 +70,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Tickets canalizados · Llamadas completadas >35s · Chats — filtros por periodo</div>
+          <div class="subtitle">Tickets canalizados · Llamadas completadas >35s · Chats ≤5min y AGENT — filtros por periodo</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -134,7 +134,7 @@
           </table>
         </div>
         <div style="margin-top:12px;color:var(--muted);font-size:13px">
-          Reglas fijas: tickets solo si columna M = <strong>CANALIZADO</strong>. Llamadas solo si columna D = <strong>completed</strong> y duración (col G) &gt; 35s. Fechas se filtran por columna H (tickets), I (chats) y C (llamadas).
+          Reglas fijas: tickets solo si columna M = <strong>CANALIZADO</strong>. Llamadas solo si columna D = <strong>completed</strong> y duración (col G) &gt; 35s. Chats solo si duración (col C) ≤ 5 minutos y columna M = <strong>AGENT</strong>. Fechas se filtran por columna H (tickets), I (chats) y C (llamadas).
         </div>
       </section>
 
@@ -158,7 +158,7 @@
             </div>
 
             <div class="stat">
-              <div><div class="label">Chats totales</div><div class="value" id="statChats">--</div></div>
+              <div><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div>
               <div style="font-size:12px;color:var(--muted)">Periodo</div>
             </div>
           </div>
@@ -166,9 +166,9 @@
           <div style="margin-top:8px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
-              • Tickets: columna E (asesor), estado en M debe ser <strong>CANALIZADO</strong>, fecha en H para filtrar.<br>
+              • Chats: columna B (asesor), duración en C debe ser ≤ 5 minutos (formato 1d 1h 1m 1s), y columna M debe ser <strong>AGENT</strong>. Fecha para filtrar está en I.<br>
               • Llamadas: columna B (asesor), estado en D debe ser <strong>completed</strong>, duración en G &gt; 35s, fecha en C para filtrar.<br>
-              • Chats: columna B (asesor), fecha en I para filtrar.
+              • Tickets: columna E (asesor), estado en M debe ser <strong>CANALIZADO</strong>, fecha en H para filtrar.
             </div>
           </div>
         </div>
@@ -187,11 +187,11 @@
 
     // Columnas usadas (0-based)
     // Tickets: asesor E (4), fecha H (7), estado M (12)
-    // Chats: asesor B (1), fecha I (8)
-    // Calls: asesor B (1), fecha C (2), estado D (3), duración G (6)
+    // Chats: advisor B (1), duration C (2), date I (8), agent flag M (12)
+    // Calls: advisor B (1), date C (2), status D (3), duration G (6)
     const COL = {
       tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), status: letterToIndex('M') },
-      chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
+      chats:  { advisor: letterToIndex('B'), duration: letterToIndex('C'), date: letterToIndex('I'), agentFlag: letterToIndex('M') },
       calls:  { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('G') }
     };
 
@@ -212,9 +212,14 @@
       return String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
     }
 
-    function normalizeStatus(s){
+    function normalizeStatusLower(s){
       if(s === null || s === undefined) return '';
       return String(s).trim().toLowerCase();
+    }
+
+    function normalizeStatusUpper(s){
+      if(s === null || s === undefined) return '';
+      return String(s).trim().toUpperCase();
     }
 
     /******************************************************************
@@ -272,19 +277,14 @@
       if(s === null || s === undefined) return 0;
       const str = String(s).trim().toLowerCase();
       if(!str) return 0;
-      // Buscar números seguidos de d/h/m/s
       let total = 0;
-      const regex = /(\d+)\s*d/;
-      const mD = str.match(regex);
+      const mD = str.match(/(\d+)\s*d/);
       if(mD) total += parseInt(mD[1],10) * 86400;
-      const regexH = /(\d+)\s*h/;
-      const mH = str.match(regexH);
+      const mH = str.match(/(\d+)\s*h/);
       if(mH) total += parseInt(mH[1],10) * 3600;
-      const regexM = /(\d+)\s*m/;
-      const mM = str.match(regexM);
+      const mM = str.match(/(\d+)\s*m/);
       if(mM) total += parseInt(mM[1],10) * 60;
-      const regexS = /(\d+)\s*s/;
-      const mS = str.match(regexS);
+      const mS = str.match(/(\d+)\s*s/);
       if(mS) total += parseInt(mS[1],10);
       // Si no se detectó ninguna letra, intentar parsear como segundos numéricos
       if(total === 0){
@@ -329,7 +329,7 @@
      * Agregación de conteos por asesor con condiciones:
      * - Tickets: solo si status (col M) === "CANALIZADO"
      * - Calls: solo si status (col D) === "completed" AND duration (col G) > 35s
-     * - Chats: como antes (col B y fecha en I)
+     * - Chats: solo si duration (col C) <= 300s AND agentFlag (col M) === "AGENT"
      ******************************************************************/
     function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
       const counts = {};
@@ -351,33 +351,51 @@
         if(!advisor) continue;
 
         const rawStatus = cell(row, COL.tickets.status);
-        const status = String(rawStatus || '').trim().toUpperCase();
+        const status = normalizeStatusUpper(rawStatus);
         if(status !== 'CANALIZADO') continue; // condición fija: solo canalizados
 
         const rawDate = cell(row, COL.tickets.date);
         const parsed = parseDateFlexible(rawDate);
 
-        // Si hay rango y la fila tiene fecha, filtrar por esa fecha (sin sumar días)
         if((filterFrom || filterTo) && parsed){
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
-        // Si hay rango y la fila NO tiene fecha, la decisión actual es contarla igualmente
         ensure(advisor);
         counts[advisor].tickets += 1;
       }
 
-      // Chats: columna B (asesor), fecha en I (index 8)
+      // Chats: aplicar condiciones
+      // - duration en columna C debe ser <= 300 segundos (5 minutos)
+      // - agentFlag en columna M debe ser "AGENT" (case-insensitive)
+      // - fecha en columna I se usa para filtrar si aplica
       for(let r=1; r<chatsRows.length; r++){
         const row = chatsRows[r];
         const rawAdvisor = cell(row, COL.chats.advisor);
         const advisor = normalizeName(rawAdvisor);
         if(!advisor) continue;
+
+        // Duración en C
+        const rawDuration = cell(row, COL.chats.duration);
+        const seconds = durationToSeconds(rawDuration);
+        if(seconds === 0 && String(rawDuration || '').trim() === '') {
+          // Si no hay duración, no contamos (regla estricta)
+          continue;
+        }
+        if(seconds > 300) continue; // mayor a 5 minutos -> excluir
+
+        // Agent flag en M debe ser "AGENT"
+        const rawAgent = cell(row, COL.chats.agentFlag);
+        const agentFlag = normalizeStatusUpper(rawAgent);
+        if(agentFlag !== 'AGENT') continue;
+
+        // Fecha en I para filtrar por periodo si aplica
         const rawDate = cell(row, COL.chats.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
           if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
+
         ensure(advisor);
         counts[advisor].chats += 1;
       }
@@ -391,7 +409,7 @@
 
         // Estado en columna D debe ser "completed" (case-insensitive)
         const rawStatus = cell(row, COL.calls.status);
-        const status = normalizeStatus(rawStatus);
+        const status = normalizeStatusLower(rawStatus);
         if(status !== 'completed') continue;
 
         // Duración en columna G debe ser > 35 segundos
@@ -576,12 +594,13 @@
     /******************************************************************
      * Comentarios finales
      *
-     * - Llamadas: condición fija aplicada — columna D debe ser "completed" (case-insensitive)
-     *   y la duración en columna G debe ser mayor a 35 segundos. El parser acepta formatos
-     *   como "1d 1h 1m 1s", "2m 10s", "45s", etc.
+     * - Chats: condición fija aplicada — duración en columna C debe ser ≤ 300 segundos
+     *   (5 minutos) y la columna M debe ser "AGENT" (case-insensitive). Fecha de chat
+     *   para filtrar está en la columna I; si hay filtro y no hay fecha, el chat no se cuenta.
+     * - Llamadas: condición fija aplicada — columna D debe ser "completed" y duración en G > 35s.
      * - Tickets: condición fija — columna M debe ser "CANALIZADO".
-     * - Fechas: se filtran por H (tickets), I (chats) y C (llamadas) según el periodo seleccionado.
-     * - Si quieres excluir tickets canalizados sin fecha cuando se aplica un periodo, lo ajusto.
+     * - Si quieres cambiar la regla sobre cómo tratar filas sin fecha (por ejemplo, excluir
+     *   tickets canalizados sin fecha cuando se aplica un periodo), lo ajusto en la próxima versión.
      ******************************************************************/
   </script>
 </body>
