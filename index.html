@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Indicadores (CANALIZADO)</title>
+  <title>Dashboard Asesores — Indicadores (Condiciones Calls)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     /* Modern Light UI (limpio y profesional) */
@@ -70,7 +70,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Tickets canalizados · Llamadas · Chats — filtros por periodo</div>
+          <div class="subtitle">Tickets canalizados · Llamadas completadas >35s · Chats — filtros por periodo</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -134,7 +134,7 @@
           </table>
         </div>
         <div style="margin-top:12px;color:var(--muted);font-size:13px">
-          Regla: solo se cuentan tickets cuyo estado en columna M sea <strong>CANALIZADO</strong>. Puntuación proporcional por canal; total = promedio de los 3 canales.
+          Reglas fijas: tickets solo si columna M = <strong>CANALIZADO</strong>. Llamadas solo si columna D = <strong>completed</strong> y duración (col G) &gt; 35s. Fechas se filtran por columna H (tickets), I (chats) y C (llamadas).
         </div>
       </section>
 
@@ -153,7 +153,7 @@
             </div>
 
             <div class="stat">
-              <div><div class="label">Llamadas totales</div><div class="value" id="statCalls">--</div></div>
+              <div><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div>
               <div style="font-size:12px;color:var(--muted)">Periodo</div>
             </div>
 
@@ -167,8 +167,8 @@
             <div style="font-size:13px;color:var(--muted)">Notas</div>
             <div style="font-size:13px;color:var(--muted);margin-top:6px">
               • Tickets: columna E (asesor), estado en M debe ser <strong>CANALIZADO</strong>, fecha en H para filtrar.<br>
-              • Chats: columna B (asesor), fecha en I para filtrar.<br>
-              • Llamadas: columna B (asesor), fecha en C para filtrar.
+              • Llamadas: columna B (asesor), estado en D debe ser <strong>completed</strong>, duración en G &gt; 35s, fecha en C para filtrar.<br>
+              • Chats: columna B (asesor), fecha en I para filtrar.
             </div>
           </div>
         </div>
@@ -188,11 +188,11 @@
     // Columnas usadas (0-based)
     // Tickets: asesor E (4), fecha H (7), estado M (12)
     // Chats: asesor B (1), fecha I (8)
-    // Calls: asesor B (1), fecha C (2)
+    // Calls: asesor B (1), fecha C (2), estado D (3), duración G (6)
     const COL = {
       tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), status: letterToIndex('M') },
       chats:  { advisor: letterToIndex('B'), date: letterToIndex('I') },
-      calls:  { advisor: letterToIndex('B'), date: letterToIndex('C') }
+      calls:  { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('G') }
     };
 
     /******************************************************************
@@ -214,7 +214,7 @@
 
     function normalizeStatus(s){
       if(s === null || s === undefined) return '';
-      return String(s).trim().toUpperCase();
+      return String(s).trim().toLowerCase();
     }
 
     /******************************************************************
@@ -265,6 +265,36 @@
     }
 
     /******************************************************************
+     * Parseo de duración con formato "1d 1h 1m 1s" -> segundos
+     * Acepta variantes como "1h 2m", "45s", "2m 10s", "1d", etc.
+     ******************************************************************/
+    function durationToSeconds(s){
+      if(s === null || s === undefined) return 0;
+      const str = String(s).trim().toLowerCase();
+      if(!str) return 0;
+      // Buscar números seguidos de d/h/m/s
+      let total = 0;
+      const regex = /(\d+)\s*d/;
+      const mD = str.match(regex);
+      if(mD) total += parseInt(mD[1],10) * 86400;
+      const regexH = /(\d+)\s*h/;
+      const mH = str.match(regexH);
+      if(mH) total += parseInt(mH[1],10) * 3600;
+      const regexM = /(\d+)\s*m/;
+      const mM = str.match(regexM);
+      if(mM) total += parseInt(mM[1],10) * 60;
+      const regexS = /(\d+)\s*s/;
+      const mS = str.match(regexS);
+      if(mS) total += parseInt(mS[1],10);
+      // Si no se detectó ninguna letra, intentar parsear como segundos numéricos
+      if(total === 0){
+        const onlyNum = str.match(/^(\d+)$/);
+        if(onlyNum) total = parseInt(onlyNum[1],10);
+      }
+      return total;
+    }
+
+    /******************************************************************
      * Obtiene rango de fechas según selector de periodo
      ******************************************************************/
     function getPeriodRange(){
@@ -296,12 +326,10 @@
     }
 
     /******************************************************************
-     * Agregación de conteos por asesor
-     *
-     * Condición fija: solo contar tickets cuyo estado en columna M sea "CANALIZADO".
-     * - Tickets: asesor en E; estado en M debe ser CANALIZADO; fecha en H se usa para filtrar si aplica.
-     * - Chats: asesor en B; fecha en I para filtrar.
-     * - Calls: asesor en B; fecha en C para filtrar.
+     * Agregación de conteos por asesor con condiciones:
+     * - Tickets: solo si status (col M) === "CANALIZADO"
+     * - Calls: solo si status (col D) === "completed" AND duration (col G) > 35s
+     * - Chats: como antes (col B y fecha en I)
      ******************************************************************/
     function aggregateCountsCSV(ticketsRows, chatsRows, callsRows, filterFrom, filterTo){
       const counts = {};
@@ -323,7 +351,7 @@
         if(!advisor) continue;
 
         const rawStatus = cell(row, COL.tickets.status);
-        const status = normalizeStatus(rawStatus);
+        const status = String(rawStatus || '').trim().toUpperCase();
         if(status !== 'CANALIZADO') continue; // condición fija: solo canalizados
 
         const rawDate = cell(row, COL.tickets.date);
@@ -334,8 +362,6 @@
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
         // Si hay rango y la fila NO tiene fecha, la decisión actual es contarla igualmente
-        // (interpretación: contar todas las ocurrencias canalizadas en E). Si prefieres excluir,
-        // puedo cambiarlo en una versión posterior.
         ensure(advisor);
         counts[advisor].tickets += 1;
       }
@@ -356,18 +382,31 @@
         counts[advisor].chats += 1;
       }
 
-      // Calls: columna B (asesor), fecha en C (index 2)
+      // Calls: aplicar condiciones
       for(let r=1; r<callsRows.length; r++){
         const row = callsRows[r];
         const rawAdvisor = cell(row, COL.calls.advisor);
         const advisor = normalizeName(rawAdvisor);
         if(!advisor) continue;
+
+        // Estado en columna D debe ser "completed" (case-insensitive)
+        const rawStatus = cell(row, COL.calls.status);
+        const status = normalizeStatus(rawStatus);
+        if(status !== 'completed') continue;
+
+        // Duración en columna G debe ser > 35 segundos
+        const rawDuration = cell(row, COL.calls.duration);
+        const seconds = durationToSeconds(rawDuration);
+        if(seconds <= 35) continue;
+
+        // Fecha en columna C para filtrar por periodo si aplica
         const rawDate = cell(row, COL.calls.date);
         const parsed = parseDateFlexible(rawDate);
         if(filterFrom || filterTo){
-          if(!parsed) continue;
+          if(!parsed) continue; // si hay filtro y no hay fecha, no contamos
           if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
         }
+
         ensure(advisor);
         counts[advisor].calls += 1;
       }
@@ -527,8 +566,6 @@
       return parseCSV(text);
     }
 
-    function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
     function formatHHmm(date){
       const d = new Date(date);
       const hh = String(d.getHours()).padStart(2,'0');
@@ -539,11 +576,12 @@
     /******************************************************************
      * Comentarios finales
      *
-     * - Implementación fija: tickets se cuentan solo si columna M === "CANALIZADO".
-     * - Fecha de ticket (col H) se usa para filtrar por periodo si existe; si no existe,
-     *   el ticket canalizado se cuenta igualmente (interpretación actual).
-     * - Si prefieres excluir tickets sin fecha cuando se aplica un periodo, lo ajusto.
-     * - Revisa permisos de la hoja: la exportación CSV requiere que la hoja sea accesible públicamente.
+     * - Llamadas: condición fija aplicada — columna D debe ser "completed" (case-insensitive)
+     *   y la duración en columna G debe ser mayor a 35 segundos. El parser acepta formatos
+     *   como "1d 1h 1m 1s", "2m 10s", "45s", etc.
+     * - Tickets: condición fija — columna M debe ser "CANALIZADO".
+     * - Fechas: se filtran por H (tickets), I (chats) y C (llamadas) según el periodo seleccionado.
+     * - Si quieres excluir tickets canalizados sin fecha cuando se aplica un periodo, lo ajusto.
      ******************************************************************/
   </script>
 </body>
