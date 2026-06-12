@@ -9,6 +9,9 @@
       --bg:#FFFFFF; --surface:#FAFAFB; --muted:#616160; --text:#231F20; --accent:#F28F17;
       --card-border:rgba(35,31,32,0.06); --radius:12px; --shadow:0 8px 24px rgba(35,31,32,0.06);
       --tab-bg:#F7F7F8; --tab-active:#FFF; --tab-border:#E9E7E6;
+      --top1: linear-gradient(90deg,#FFD966,#FFB86B);
+      --top2: linear-gradient(90deg,#E6E6E6,#FFDDAA);
+      --top3: linear-gradient(90deg,#F0F0F0,#FFEFD5);
     }
     html,body{height:100%;margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);-webkit-font-smoothing:antialiased}
     .wrap{max-width:1200px;margin:28px auto;padding:20px}
@@ -46,7 +49,13 @@
     .advisor-name{font-weight:700}
     .meta-small{font-size:12px;color:var(--muted)}
     .score{color:var(--accent);font-weight:800;font-size:16px}
-    .vol{color:var(--muted);font-weight:700;cursor:pointer;text-decoration:underline}
+    .vol{color:var(--muted);font-weight:700}
+
+    /* TOP highlights */
+    .top-highlight-1 td{background:var(--top1);color:#000}
+    .top-highlight-2 td{background:var(--top2);color:#000}
+    .top-highlight-3 td{background:var(--top3);color:#000}
+    .badge-top{display:inline-block;background:#000;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px;margin-left:8px;font-weight:800}
 
     .side .card{display:flex;flex-direction:column;gap:12px}
     .stat{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(35,31,32,0.03)}
@@ -247,6 +256,8 @@
     let metaMap = {};
     let cache = { tickets:[], chats:[], calls:[] }; // raw CSV rows cached
     let activeGroup = 'All';
+    let autoRefreshTimer = null;
+    const AUTO_REFRESH_MS = 15 * 60 * 1000; // 15 minutes
 
     /******************************************************************
      * UTILIDADES CSV / PARSE / NORMALIZACIÓN
@@ -504,7 +515,7 @@
     }
 
     /******************************************************************
-     * Renderizado y helpers UI
+     * Renderizado y TOP3 highlight
      ******************************************************************/
     function renderSkeletonRows(){
       const tbody = document.getElementById('leaderboardBody');
@@ -530,7 +541,7 @@
         tr.innerHTML = `
           <td><div class="${posClass}">${idx+1}</div></td>
           <td>
-            <div class="advisor-name">${escapeHtml(row.name)}</div>
+            <div class="advisor-name">${escapeHtml(row.name)}${''}</div>
             <div class="meta-small">${metaMap[row.name] ? metaMap[row.name].group + ' · ' + (metaMap[row.name].supervisor || '') : ''}</div>
           </td>
           <td><div class="vol">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
@@ -540,10 +551,30 @@
         `;
         tbody.appendChild(tr);
       });
+
+      // If more than 7 records, mark top 3
+      if(scores.length > 7){
+        const rows = tbody.querySelectorAll('tr');
+        if(rows[0]) rows[0].classList.add('top-highlight-1');
+        if(rows[1]) rows[1].classList.add('top-highlight-2');
+        if(rows[2]) rows[2].classList.add('top-highlight-3');
+        // add badges to first three name cells
+        for(let i=0;i<3;i++){
+          const row = rows[i];
+          if(!row) continue;
+          const nameCell = row.querySelector('td:nth-child(2) .advisor-name');
+          if(nameCell){
+            const badge = document.createElement('span');
+            badge.className = 'badge-top';
+            badge.textContent = `TOP ${i+1}`;
+            nameCell.appendChild(badge);
+          }
+        }
+      }
     }
 
     /******************************************************************
-     * Modal protegido y detalles on-demand (igual que antes)
+     * Modal protegido y detalles on-demand (mantener funcionalidad)
      ******************************************************************/
     const SECRET_CODE = 'SUPER';
     function showLoading(){ document.getElementById('loadingOverlay').style.display = 'flex'; }
@@ -556,7 +587,8 @@
       document.getElementById('detailsArea').style.display = 'none';
       document.getElementById('secretInput').value = '';
       document.getElementById('authMsg').textContent = '';
-      document.getElementById('detailsTable').querySelector('tbody').innerHTML = '';
+      const tbody = document.getElementById('detailsTable').querySelector('tbody');
+      if(tbody) tbody.innerHTML = '';
     }
     document.getElementById('modalClose').addEventListener('click', hideModal);
     document.getElementById('modalBackdrop').addEventListener('click', (e) => { if(e.target.id === 'modalBackdrop') hideModal(); });
@@ -564,37 +596,7 @@
     function isAuthorized(){ try{ return sessionStorage.getItem('authorized') === '1'; } catch(e){ return false; } }
     function setAuthorized(){ try{ sessionStorage.setItem('authorized','1'); } catch(e){} }
 
-    async function tryShowDetailsOnDemand(canonicalName, type){
-      showModal();
-      document.getElementById('modalTitle').textContent = `Detalles: ${canonicalName} — ${type}`;
-      if(isAuthorized()){
-        await buildAndRenderDetails(canonicalName, type);
-        return;
-      }
-      document.getElementById('authArea').style.display = 'flex';
-      document.getElementById('detailsArea').style.display = 'none';
-      document.getElementById('authMsg').textContent = '';
-      const secretBtn = document.getElementById('secretBtn');
-      const secretInput = document.getElementById('secretInput');
-
-      const handler = async () => {
-        const val = (secretInput.value || '').trim();
-        if(val === SECRET_CODE){
-          setAuthorized();
-          document.getElementById('authMsg').textContent = 'Acceso concedido';
-          await buildAndRenderDetails(canonicalName, type);
-          secretBtn.removeEventListener('click', handler);
-        } else {
-          document.getElementById('authMsg').textContent = 'Código incorrecto';
-        }
-      };
-      secretBtn.removeEventListener('click', handler);
-      secretBtn.addEventListener('click', handler);
-      secretInput.addEventListener('keydown', function onKey(e){
-        if(e.key === 'Enter'){ handler(); secretInput.removeEventListener('keydown', onKey); }
-      });
-    }
-
+    // buildAndRenderDetails kept minimal (used only when authorized and requested)
     async function buildAndRenderDetails(canonicalName, type){
       document.getElementById('authArea').style.display = 'none';
       document.getElementById('detailsArea').style.display = 'none';
@@ -768,15 +770,42 @@
     });
 
     /******************************************************************
-     * Main flow: carga optimizada (cache) y render counts
+     * Auto-refresh (datos solamente) y carga inicial
      ******************************************************************/
+    async function refreshDataOnly(){
+      try{
+        // fetch raw sheets and update cache, then recompute counts and re-render
+        const [ticketsRows, chatsRows, callsRows] = await Promise.all([
+          fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.tickets),
+          fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.chats),
+          fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.calls)
+        ]);
+        cache.tickets = ticketsRows;
+        cache.chats = chatsRows;
+        cache.calls = callsRows;
+        // update last sync time
+        document.getElementById('lastSync').textContent = formatHHmm(new Date());
+        // recompute counts and render
+        applyFiltersAndRender();
+      } catch(err){
+        console.warn('Error al refrescar datos:', err.message);
+      }
+    }
+
     async function loadAndRender(){
       try{
         renderSkeletonRows();
         showLoading();
+        // set default period to "Este Mes" on load
+        document.getElementById('periodSelector').value = 'thisMonth';
+        const { fromDateOnly, toDateOnly } = getPeriodRange();
+        if(fromDateOnly) document.getElementById('dateFrom').value = fromDateOnly.toISOString().slice(0,10);
+        if(toDateOnly) document.getElementById('dateTo').value = toDateOnly.toISOString().slice(0,10);
+
         document.getElementById('lastSync').textContent = formatHHmm(new Date());
         await buildAliasAndMetaMaps();
         populateSupervisorFilter();
+        // initial fetch and cache
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.tickets),
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.chats),
@@ -786,6 +815,11 @@
         cache.chats = chatsRows;
         cache.calls = callsRows;
         applyFiltersAndRender();
+        // start auto-refresh timer for data only
+        if(autoRefreshTimer) clearInterval(autoRefreshTimer);
+        autoRefreshTimer = setInterval(() => {
+          refreshDataOnly();
+        }, AUTO_REFRESH_MS);
       } catch(err){
         console.error(err);
         alert('Error al cargar datos: ' + err.message + '. Revisa permisos de las hojas o la consola.');
@@ -794,6 +828,9 @@
       }
     }
 
+    /******************************************************************
+     * Period / Filters helpers
+     ******************************************************************/
     function getPeriodRange(){
       const sel = document.getElementById('periodSelector').value;
       const today = new Date();
@@ -865,7 +902,7 @@
      * Eventos UI
      ******************************************************************/
     document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
-    document.getElementById('refreshBtn').addEventListener('click', () => loadAndRender());
+    document.getElementById('refreshBtn').addEventListener('click', () => refreshDataOnly());
     document.getElementById('periodSelector').addEventListener('change', () => {
       const sel = document.getElementById('periodSelector').value;
       if(sel !== 'custom'){
