@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Optimizado + Descargas protegidas</title>
+  <title>Dashboard Asesores — Grupos y Vista por Supervisor</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
@@ -30,6 +30,10 @@
 
     button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
     button.ghost{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
+
+    .tabs{display:flex;gap:8px;margin:6px 0 12px 0;flex-wrap:wrap}
+    .tab{background:var(--card);border:1px solid var(--border);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700;color:var(--muted)}
+    .tab.active{background:linear-gradient(180deg,#fff,#fff);box-shadow:var(--shadow);color:var(--text)}
 
     .main-grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
     @media(max-width:1000px){.main-grid{grid-template-columns:1fr}}
@@ -77,6 +81,9 @@
     .goal-block{padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(31,31,31,0.03);margin-bottom:8px}
     .goal-title{font-weight:800;margin-bottom:6px}
     .goal-item{font-size:14px;margin:4px 0}
+    .supervisor-view{margin-top:12px;border-top:1px solid rgba(31,31,31,0.04);padding-top:12px}
+    .sup-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#fff;border:1px solid rgba(31,31,31,0.03);margin-bottom:8px}
+    .sup-name{font-weight:800}
     footer{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
   </style>
 </head>
@@ -87,7 +94,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Interfaz optimizada · Descargas protegidas</div>
+          <div class="subtitle">Grupos, metas y vista por supervisor</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -128,6 +135,15 @@
         <button class="primary" id="applyFilters">Aplicar</button>
         <button class="ghost" id="refreshBtn" title="Refrescar datos">Refrescar</button>
       </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Grupos">
+      <div class="tab active" data-group="All">Todos</div>
+      <div class="tab" data-group="Vento">Vento</div>
+      <div class="tab" data-group="Piston">Piston</div>
+      <div class="tab" data-group="Home Office">Home Office</div>
+      <div class="tab" data-group="Nuevo ingreso">Nuevo ingreso</div>
+      <div class="tab" data-group="OTROS">OTROS</div>
     </div>
 
     <div class="main-grid">
@@ -185,21 +201,28 @@
 
           <div class="goal-block" aria-label="Modalidad Presencial">
             <div class="goal-title">🏢 MODALIDAD PRESENCIAL</div>
-            <div class="goal-item">🔴 Tickets: <strong>430</strong></div>
-            <div class="goal-item">⚪ Chats: <strong>310</strong></div>
-            <div class="goal-item">⚫ Llamadas: <strong>363</strong></div>
+            <div class="goal-item">🔴 Tickets: <strong id="goal_pres_tickets">430</strong></div>
+            <div class="goal-item">⚪ Chats: <strong id="goal_pres_chats">310</strong></div>
+            <div class="goal-item">⚫ Llamadas: <strong id="goal_pres_calls">363</strong></div>
           </div>
 
           <div class="goal-block" aria-label="Modalidad Home Office">
             <div class="goal-title">🏡 MODALIDAD HOME OFFICE</div>
-            <div class="goal-item">⚫ Tickets: <strong>514</strong></div>
-            <div class="goal-item">⚪ Chats: <strong>2015</strong></div>
+            <div class="goal-item">⚫ Tickets: <strong id="goal_ho_tickets">514</strong></div>
+            <div class="goal-item">⚪ Chats: <strong id="goal_ho_chats">2015</strong></div>
           </div>
 
           <div class="goal-block" aria-label="Meta general">
             <div class="goal-title">🎯 META GENERAL</div>
-            <div class="goal-item">🏁 Total de Tickets: <strong>menos de 500</strong></div>
+            <div class="goal-item">🏁 Total de Tickets: <strong id="goal_general">menos de 500</strong></div>
           </div>
+        </div>
+
+        <div class="supervisor-view">
+          <h3 style="margin:8px 0 8px 0;font-size:14px;color:var(--muted)">Vista por supervisor</h3>
+          <div class="sup-row"><div class="sup-name">IVAN GERARDO MORENO GARATACHEA</div><div id="supIvan" class="meta-small">Tickets: -- · Llamadas: -- · Chats: --</div></div>
+          <div class="sup-row"><div class="sup-name">CECILIA CARRERA MORALES</div><div id="supCecilia" class="meta-small">Tickets: -- · Llamadas: -- · Chats: --</div></div>
+          <div class="sup-row"><div class="sup-name">OTROS</div><div id="supOtros" class="meta-small">Tickets: -- · Llamadas: -- · Chats: --</div></div>
         </div>
       </aside>
     </div>
@@ -569,10 +592,8 @@
       }).join(',')).join('\n');
     }
 
-    // Construye filas raw (cabecera + filas) según filtros actuales
     function buildFilteredRawRows(){
       const out = [];
-      // header: Tipo, Fecha, AsesorCanonical, AsesorRaw, Grupo, Supervisor, Estado/Agent, Duración, RawRow
       out.push(['Tipo','Fecha','AsesorCanonical','AsesorRaw','Grupo','Supervisor','Estado/Agent','Duración','RawRow']);
       const { fromDateOnly, toDateOnly } = getPeriodRange();
       const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
@@ -587,7 +608,6 @@
         return true;
       }
 
-      // Tickets: include raw rows that meet ticket rules and date filter
       const tickets = cache.tickets || [];
       for(let r=1; r<tickets.length; r++){
         const row = tickets[r];
@@ -609,7 +629,6 @@
         out.push(['Ticket', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, status, '', row.join(' | ')]);
       }
 
-      // Chats
       const chats = cache.chats || [];
       for(let r=1; r<chats.length; r++){
         const row = chats[r];
@@ -635,7 +654,6 @@
         out.push(['Chat', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, agentFlag, rawDuration || '', row.join(' | ')]);
       }
 
-      // Calls
       const calls = cache.calls || [];
       for(let r=1; r<calls.length; r++){
         const row = calls[r];
@@ -663,9 +681,6 @@
       return out;
     }
 
-    /******************************************************************
-     * Descargas y modal
-     ******************************************************************/
     function downloadCSV(text, filename){
       const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -692,18 +707,98 @@
 
     async function confirmDownloadAction(){
       const val = (document.getElementById('downloadPassword').value || '').trim();
-      if(!val){
-        document.getElementById('modalMsg').textContent = 'Introduce la clave';
-        return;
-      }
-      if(val !== SECRET_CODE){
-        document.getElementById('modalMsg').textContent = 'Clave incorrecta';
-        return;
-      }
+      if(!val){ document.getElementById('modalMsg').textContent = 'Introduce la clave'; return; }
+      if(val !== SECRET_CODE){ document.getElementById('modalMsg').textContent = 'Clave incorrecta'; return; }
       const pd = pendingDownload;
       if(!pd){ closePasswordModal(); return; }
       downloadCSV(pd.data.csv, pd.data.filename);
       closePasswordModal();
+    }
+
+    /******************************************************************
+     * Supervisor summary (solo IVAN, CECILIA y OTROS)
+     ******************************************************************/
+    function computeSupervisorSummary(){
+      const supBuckets = {
+        "IVAN GERARDO MORENO GARATACHEA": { tickets:0, calls:0, chats:0 },
+        "CECILIA CARRERA MORALES": { tickets:0, calls:0, chats:0 },
+        "OTROS": { tickets:0, calls:0, chats:0 }
+      };
+      const { fromDateOnly, toDateOnly } = getPeriodRange();
+
+      function inRange(parsed){
+        if(!parsed) return false;
+        const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+        if(fromDateOnly && dd < fromDateOnly) return false;
+        if(toDateOnly && dd > toDateOnly) return false;
+        return true;
+      }
+
+      // Tickets
+      const tickets = cache.tickets || [];
+      for(let r=1; r<tickets.length; r++){
+        const row = tickets[r];
+        const rawAdvisor = row[COL.tickets.advisor] || '';
+        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+        if(!advisorCanonical) continue;
+        const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
+        const sup = (meta.supervisor || 'OTROS').toUpperCase();
+        const status = String(row[COL.tickets.status] || '').trim().toUpperCase();
+        if(status !== 'CANALIZADO') continue;
+        const parsed = parseDateFlexible(row[COL.tickets.date]);
+        if((fromDateOnly || toDateOnly) && parsed && !inRange(parsed)) continue;
+        if((fromDateOnly || toDateOnly) && !parsed) continue;
+        const key = (sup === "IVAN GERARDO MORENO GARATACHEA" || sup === "CECILIA CARRERA MORALES") ? sup : "OTROS";
+        supBuckets[key].tickets += 1;
+      }
+
+      // Chats
+      const chats = cache.chats || [];
+      for(let r=1; r<chats.length; r++){
+        const row = chats[r];
+        const rawAdvisor = row[COL.chats.advisor] || '';
+        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+        if(!advisorCanonical) continue;
+        const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
+        const sup = (meta.supervisor || 'OTROS').toUpperCase();
+        const rawDuration = row[COL.chats.duration];
+        const seconds = durationToSeconds(rawDuration);
+        if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
+        if(seconds > 300) continue;
+        const agentFlag = String(row[COL.chats.agentFlag] || '').trim().toUpperCase();
+        if(agentFlag !== 'AGENT') continue;
+        const parsed = parseDateFlexible(row[COL.chats.date]);
+        if((fromDateOnly || toDateOnly) && parsed && !inRange(parsed)) continue;
+        if((fromDateOnly || toDateOnly) && !parsed) continue;
+        const key = (sup === "IVAN GERARDO MORENO GARATACHEA" || sup === "CECILIA CARRERA MORALES") ? sup : "OTROS";
+        supBuckets[key].chats += 1;
+      }
+
+      // Calls
+      const calls = cache.calls || [];
+      for(let r=1; r<calls.length; r++){
+        const row = calls[r];
+        const rawAdvisor = row[COL.calls.advisor] || '';
+        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+        if(!advisorCanonical) continue;
+        const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
+        const sup = (meta.supervisor || 'OTROS').toUpperCase();
+        const status = String(row[COL.calls.status] || '').trim().toLowerCase();
+        if(status !== 'completed') continue;
+        const rawDuration = row[COL.calls.duration];
+        const seconds = durationToSeconds(rawDuration);
+        if(seconds <= 35) continue;
+        const parsed = parseDateFlexible(row[COL.calls.date]);
+        if((fromDateOnly || toDateOnly) && parsed && !inRange(parsed)) continue;
+        if((fromDateOnly || toDateOnly) && !parsed) continue;
+        const key = (sup === "IVAN GERARDO MORENO GARATACHEA" || sup === "CECILIA CARRERA MORALES") ? sup : "OTROS";
+        supBuckets[key].calls += 1;
+      }
+
+      // render into UI
+      document.getElementById('supIvan').textContent = `Tickets: ${supBuckets["IVAN GERARDO MORENO GARATACHEA"].tickets} · Llamadas: ${supBuckets["IVAN GERARDO MORENO GARATACHEA"].calls} · Chats: ${supBuckets["IVAN GERARDO MORENO GARATACHEA"].chats}`;
+      document.getElementById('supCecilia').textContent = `Tickets: ${supBuckets["CECILIA CARRERA MORALES"].tickets} · Llamadas: ${supBuckets["CECILIA CARRERA MORALES"].calls} · Chats: ${supBuckets["CECILIA CARRERA MORALES"].chats}`;
+      document.getElementById('supOtros').textContent = `Tickets: ${supBuckets["OTROS"].tickets} · Llamadas: ${supBuckets["OTROS"].calls} · Chats: ${supBuckets["OTROS"].chats}`;
     }
 
     /******************************************************************
@@ -821,6 +916,7 @@
       updateSideStats(counts);
       renderLeaderboard(scores);
       window.__lastRenderedScores = scores;
+      computeSupervisorSummary();
     }
 
     function updateSideStats(counts){
