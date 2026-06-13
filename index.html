@@ -2,110 +2,109 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Exportación Tablas Crudas</title>
+  <title>Dashboard Asesores — Optimizado + Descargas con clave</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
-      --bg:#FFFFFF; --surface:#FAFAFB; --muted:#616160; --text:#231F20; --accent:#F28F17;
-      --card-border:rgba(35,31,32,0.06); --radius:12px; --shadow:0 8px 24px rgba(35,31,32,0.06);
-      --tab-bg:#F7F7F8; --tab-active:#FFF; --tab-border:#E9E7E6;
-      --top1: linear-gradient(90deg,#FFD966,#FFB86B);
-      --top2: linear-gradient(90deg,#E6E6E6,#FFDDAA);
-      --top3: linear-gradient(90deg,#F0F0F0,#FFEFD5);
+      --bg:#F6F7FB; --card:#FFFFFF; --muted:#6B6B6B; --text:#1F1F23; --accent:#F28F17;
+      --accent-2:#FFB86B; --border:rgba(31,31,31,0.06); --radius:12px; --shadow:0 10px 30px rgba(31,31,31,0.06);
+      --top1:linear-gradient(90deg,#FFD966,#FFB86B);
+      --top2:linear-gradient(90deg,#E6E6E6,#FFDDAA);
+      --top3:linear-gradient(90deg,#F0F0F0,#FFEFD5);
     }
-    html,body{height:100%;margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),var(--surface));color:var(--text);-webkit-font-smoothing:antialiased}
-    .wrap{max-width:1200px;margin:28px auto;padding:20px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-    .brand{display:flex;align-items:center;gap:14px}
-    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:22px;box-shadow:0 8px 24px rgba(242,143,23,0.12)}
-    h1{font-size:34px;margin:0;font-weight:700}
-    .subtitle{font-size:13px;color:var(--muted);margin-top:6px}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    .container{max-width:1200px;margin:28px auto;padding:20px;display:flex;flex-direction:column;gap:18px}
 
-    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:end}
-    .control{background:var(--bg);border:1px solid var(--card-border);padding:12px;border-radius:10px;min-width:180px;box-shadow:var(--shadow)}
+    /* Header */
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:20px;box-shadow:var(--shadow)}
+    h1{font-size:20px;margin:0}
+    .subtitle{font-size:13px;color:var(--muted);margin-top:4px}
+
+    /* Controls */
+    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .control{background:var(--card);border:1px solid var(--border);padding:10px;border-radius:10px;min-width:160px;box-shadow:0 6px 18px rgba(0,0,0,0.03)}
     .control label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input[type="date"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(35,31,32,0.06);background:#fff;color:var(--text);outline:none;font-size:14px}
+    select,input[type="date"]{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(31,31,31,0.06);font-size:14px}
+    .actions{display:flex;gap:8px;align-items:center}
+
     button.primary{background:var(--accent);border:none;color:#000;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
-    button.ghost{background:transparent;border:1px solid rgba(35,31,32,0.06);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
 
-    .tabs{display:flex;gap:8px;margin:12px 0 18px 0}
-    .tab{background:var(--tab-bg);border:1px solid var(--tab-border);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:700;color:var(--muted);transition:all .12s ease}
-    .tab:hover{transform:translateY(-2px)}
-    .tab.active{background:var(--tab-active);color:var(--text);box-shadow:var(--shadow);border-color:rgba(35,31,32,0.06)}
+    /* Layout */
+    .main-grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+    @media(max-width:1000px){.main-grid{grid-template-columns:1fr}}
 
-    .layout{display:grid;grid-template-columns:1fr 420px;gap:18px}
-    @media(max-width:1100px){.layout{grid-template-columns:1fr 360px}}
-    @media(max-width:980px){.layout{grid-template-columns:1fr}}
+    .card{background:var(--card);border-radius:var(--radius);padding:14px;border:1px solid var(--border);box-shadow:var(--shadow)}
+    .card h2{margin:0 0 8px 0;font-size:15px;color:var(--muted)}
 
-    .card{background:#fff;border-radius:var(--radius);padding:16px;border:1px solid var(--card-border);box-shadow:var(--shadow)}
-    .card h2{margin:0 0 8px 0;font-size:18px;color:var(--muted)}
-    .table-wrap{overflow:auto;border-radius:8px;margin-top:12px}
-    table{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
-    thead th{text-align:left;padding:14px 12px;color:var(--muted);font-size:13px;font-weight:700;border-bottom:1px solid rgba(35,31,32,0.04)}
-    tbody td{padding:12px;border-bottom:1px solid rgba(35,31,32,0.03);vertical-align:middle;color:var(--text)}
+    /* Leaderboard table */
+    .table-wrap{overflow:auto;border-radius:8px;margin-top:8px}
+    table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
+    thead th{text-align:left;padding:12px 10px;color:var(--muted);font-size:13px;border-bottom:1px solid rgba(31,31,31,0.04)}
+    tbody td{padding:12px 10px;border-bottom:1px solid rgba(31,31,31,0.03);vertical-align:middle}
     tbody tr:hover{background:linear-gradient(90deg, rgba(242,143,23,0.03), rgba(242,143,23,0.01))}
-    .pos{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;border:1px solid rgba(35,31,32,0.04)}
-    .pos.top{background:linear-gradient(90deg,var(--accent),#ffb86b);color:#000}
+    .pos{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;border:1px solid rgba(31,31,31,0.04)}
+    .pos.top{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#000}
     .advisor-name{font-weight:700}
     .meta-small{font-size:12px;color:var(--muted)}
     .score{color:var(--accent);font-weight:800;font-size:16px}
-    .vol{color:var(--muted);font-weight:700}
 
-    /* TOP highlights */
+    /* Top highlights */
     .top-highlight-1 td{background:var(--top1);color:#000}
     .top-highlight-2 td{background:var(--top2);color:#000}
     .top-highlight-3 td{background:var(--top3);color:#000}
     .badge-top{display:inline-block;background:#000;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px;margin-left:8px;font-weight:800}
 
-    .side .card{display:flex;flex-direction:column;gap:12px}
-    .stat{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(35,31,32,0.03)}
+    /* Side stats */
+    .stats{display:flex;flex-direction:column;gap:10px}
+    .stat{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:10px;background:linear-gradient(180deg,#fff,#fff);border:1px solid rgba(31,31,31,0.03)}
     .stat .label{color:var(--muted);font-size:13px}
-    .stat .value{font-weight:800;font-size:20px;color:var(--text)}
-    .empty{padding:28px;text-align:center;color:var(--muted)}
+    .stat .value{font-weight:800;font-size:18px;color:var(--text)}
+
+    /* Export area */
+    .export-actions{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .small-btn{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;text-align:left}
+
+    /* Loading overlay */
+    .loading-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.8);z-index:9999;flex-direction:column;gap:12px}
+    .spinner{width:56px;height:56px;border-radius:50%;border:8px solid rgba(0,0,0,0.06);border-top-color:var(--accent);animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-weight:700;color:var(--muted)}
 
     /* Modal */
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:9999}
-    .modal{background:#fff;border-radius:12px;padding:18px;max-width:920px;width:94%;max-height:86vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:10000}
+    .modal{background:#fff;border-radius:12px;padding:18px;max-width:760px;width:94%;max-height:86vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
     .modal h3{margin:0 0 8px 0}
     .modal .close{float:right;background:transparent;border:none;font-weight:800;font-size:18px;cursor:pointer}
-    .secret-prompt{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-    .small-muted{font-size:12px;color:var(--muted)}
+    .modal .row{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .modal input[type="password"]{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border)}
 
-    /* Global loading overlay */
-    .loading-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);z-index:9998;flex-direction:column;gap:12px}
-    .spinner{width:64px;height:64px;border-radius:50%;border:8px solid rgba(0,0,0,0.08);border-top-color:var(--accent);animation:spin 1s linear infinite;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent)}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-text{font-weight:700;color:var(--muted);animation:pulse 1.6s ease-in-out infinite}
-    @keyframes pulse{0%{opacity:0.35}50%{opacity:1}100%{opacity:0.35}}
-
-    /* Skeleton rows */
-    .skeleton-row td{background:linear-gradient(90deg,#f4f4f4,#fafafa,#f4f4f4);background-size:200% 100%;animation:shimmer 1.2s linear infinite}
-    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-    .small-btn{padding:8px 10px;border-radius:8px;border:1px solid var(--card-border);background:#fff;cursor:pointer}
+    footer{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="container">
     <header>
       <div class="brand">
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Exportación de tablas crudas</div>
+          <div class="subtitle">Interfaz optimizada · Descargas protegidas</div>
         </div>
       </div>
       <div style="text-align:right">
         <div style="font-size:13px;color:var(--muted)">Última sincronización</div>
-        <div id="lastSync" style="font-weight:700;color:var(--text);margin-top:6px">--:--</div>
+        <div id="lastSync" style="font-weight:800;color:var(--text);margin-top:6px">--:--</div>
       </div>
     </header>
 
-    <!-- Controles / Filtros -->
-    <div class="controls" aria-label="Filtros">
+    <div class="controls">
       <div class="control">
         <label>Periodo</label>
-        <select id="periodSelector">
+        <select id="periodSelector" aria-label="Periodo">
           <option value="custom">Personalizado</option>
           <option value="today">Hoy</option>
           <option value="thisMonth">Este Mes</option>
@@ -115,42 +114,33 @@
 
       <div class="control">
         <label>Fecha inicio</label>
-        <input type="date" id="dateFrom">
+        <input type="date" id="dateFrom" aria-label="Fecha inicio">
       </div>
 
       <div class="control">
         <label>Fecha fin</label>
-        <input type="date" id="dateTo">
+        <input type="date" id="dateTo" aria-label="Fecha fin">
       </div>
 
-      <div class="control" style="min-width:260px">
+      <div class="control" style="min-width:220px">
         <label>Supervisor</label>
-        <select id="filterSupervisor">
+        <select id="filterSupervisor" aria-label="Supervisor">
           <option value="">Todos los supervisores</option>
         </select>
       </div>
 
-      <div style="display:flex;gap:8px;align-items:center">
+      <div class="actions">
         <button class="primary" id="applyFilters">Aplicar</button>
-        <button class="ghost" id="refreshBtn">Refrescar</button>
+        <button class="ghost" id="refreshBtn" title="Refrescar datos">Refrescar</button>
       </div>
     </div>
 
-    <!-- Tabs de Grupo -->
-    <div class="tabs" role="tablist" aria-label="Grupos">
-      <div class="tab active" data-group="All">Todos</div>
-      <div class="tab" data-group="Vento">Vento</div>
-      <div class="tab" data-group="Piston">Piston</div>
-      <div class="tab" data-group="Home Office">Home Office</div>
-      <div class="tab" data-group="Nuevo ingreso">Nuevo ingreso</div>
-      <div class="tab" data-group="OTROS">OTROS</div>
-    </div>
-
-    <main class="layout">
+    <div class="main-grid">
+      <!-- Leaderboard -->
       <section class="card">
         <h2>Leaderboard</h2>
-        <div class="table-wrap" role="table" aria-label="Leaderboard table">
-          <table id="leaderboardTable" role="grid">
+        <div class="table-wrap" role="table" aria-label="Leaderboard">
+          <table id="leaderboardTable" role="grid" aria-live="polite">
             <thead>
               <tr>
                 <th>Pos</th>
@@ -164,87 +154,73 @@
             <tbody id="leaderboardBody"></tbody>
           </table>
         </div>
-        <div style="margin-top:12px;color:var(--muted);font-size:13px">
-          Reglas: tickets canalizados (col M = CANALIZADO). Llamadas completed y duración &gt;35s. Chats duración ≤5min y agent flag = AGENT. Nombres consolidados por diccionario Asesores; sin grupo → OTROS.
+        <div style="margin-top:10px;color:var(--muted);font-size:13px">
+          Reglas: tickets canalizados (col M = CANALIZADO). Llamadas completed y duración &gt;35s. Chats duración ≤5min y agent flag = AGENT. Nombres consolidados por Asesores; sin grupo → OTROS.
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+          <button class="small-btn" id="downloadFiltered">Descargar vista filtrada (CSV)</button>
+          <div style="font-size:12px;color:var(--muted);margin-left:8px">Descarga protegida por clave cada vez que se solicita</div>
         </div>
       </section>
 
-      <!-- PANEL LATERAL: Estadísticas + Export crudo -->
-      <aside class="side">
-        <div class="card">
-          <h2>Estadísticas</h2>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="stat"><div><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div><div style="font-size:12px;color:var(--muted)">Total</div></div>
-            <div class="stat"><div><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div><div style="font-size:12px;color:var(--muted)">Periodo</div></div>
-            <div class="stat"><div><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div><div style="font-size:12px;color:var(--muted)">Periodo</div></div>
-            <div class="stat"><div><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div><div style="font-size:12px;color:var(--muted)">Periodo</div></div>
+      <!-- Side: stats + exports -->
+      <aside class="card">
+        <h2>Estadísticas y export</h2>
+        <div class="stats" aria-hidden="false">
+          <div class="stat"><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
+          <div class="stat"><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div>
+          <div class="stat"><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div>
+          <div class="stat"><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div>
+        </div>
+
+        <div style="margin-top:12px;border-top:1px solid rgba(31,31,31,0.04);padding-top:12px">
+          <h3 style="margin:0 0 8px 0;font-size:14px;color:var(--muted)">Exportar tablas crudas</h3>
+          <div class="export-actions">
+            <button class="small-btn" id="exportTickets">Exportar Tickets (CSV)</button>
+            <button class="small-btn" id="exportChats">Exportar Chats (CSV)</button>
+            <button class="small-btn" id="exportCalls">Exportar Llamadas (CSV)</button>
           </div>
-
-          <hr style="margin:12px 0;border:none;border-top:1px solid rgba(35,31,32,0.04)">
-
-          <h2>Exportar tablas crudas</h2>
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <button class="small-btn" id="exportTickets">Export Tickets CSV</button>
-            <button class="small-btn" id="exportChats">Export Chats CSV</button>
-            <button class="small-btn" id="exportCalls">Export Calls CSV</button>
-          </div>
-
-          <div style="margin-top:12px;border-top:1px solid rgba(35,31,32,0.04);padding-top:10px">
-            <div style="font-size:13px;color:var(--muted)">Notas</div>
-            <div style="font-size:13px;color:var(--muted);margin-top:6px">
-              • Las exportaciones descargan las tablas crudas cacheadas en CSV.<br>
-              • Los detalles individuales siguen protegidos por código <strong>SUPER</strong>.
-            </div>
+          <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+            Cada exportación solicita la clave. Si quieres que las exportaciones no pidan clave, puedo cambiarlo.
           </div>
         </div>
       </aside>
-    </main>
+    </div>
+
+    <footer>Interfaz optimizada · Actualización de datos cada 15 minutos · Descargas protegidas</footer>
   </div>
 
-  <!-- Global loading overlay -->
+  <!-- Loading overlay -->
   <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
-    <div class="spinner" role="status" aria-live="polite" aria-label="Cargando datos"></div>
+    <div class="spinner" role="status" aria-live="polite"></div>
     <div class="loading-text">Cargando datos…</div>
   </div>
 
-  <!-- Modal backdrop (detalles protegidos) -->
+  <!-- Modal: password prompt for downloads -->
   <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
+    <div class="modal" role="document" aria-labelledby="modalTitle">
       <button class="close" id="modalClose" aria-label="Cerrar">&times;</button>
-      <h3 id="modalTitle">Detalles</h3>
-
-      <div id="authArea" class="secret-prompt">
-        <div class="small-muted">Introduce código para ver detalles:</div>
-        <input id="secretInput" type="password" placeholder="Código" style="padding:8px;border-radius:8px;border:1px solid #ddd">
-        <button id="secretBtn" class="primary">Validar</button>
-        <div id="authMsg" class="small-muted" style="margin-left:8px"></div>
+      <h3 id="modalTitle">Clave requerida</h3>
+      <div style="color:var(--muted);font-size:13px;margin-top:6px">Introduce la clave para autorizar la descarga. La clave se solicita cada vez.</div>
+      <div class="row" style="margin-top:12px">
+        <input id="downloadPassword" type="password" placeholder="Clave" aria-label="Clave de descarga">
+        <button class="primary" id="confirmDownload">Validar y descargar</button>
       </div>
-
-      <div id="detailsArea" style="display:none">
-        <div style="margin-bottom:10px"><strong id="detailsHeader"></strong></div>
-        <div class="table-wrap" style="max-height:56vh;overflow:auto">
-          <table id="detailsTable">
-            <thead>
-              <tr><th>Tipo</th><th>Fecha</th><th>Asesor</th><th>Estado / Agent</th><th>Duración</th><th>Info</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
+      <div id="modalMsg" style="margin-top:10px;color:var(--muted);font-size:13px"></div>
     </div>
   </div>
 
   <script>
     /******************************************************************
-     * CONFIG
+     * CONFIG y constantes
      ******************************************************************/
     const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
     const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE';
     const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD', asesoresSheet: 'Asesores' };
+    const SECRET_CODE = 'SUPER'; // clave requerida para descargas y detalles
+    const AUTO_REFRESH_MS = 15 * 60 * 1000; // 15 minutos
 
     function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
-
     const COL = {
       tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), status: letterToIndex('M') },
       chats:  { advisor: letterToIndex('B'), duration: letterToIndex('C'), date: letterToIndex('I'), agentFlag: letterToIndex('M') },
@@ -254,13 +230,13 @@
 
     let aliasMap = {};
     let metaMap = {};
-    let cache = { tickets:[], chats:[], calls:[] }; // raw CSV rows cached
+    let cache = { tickets:[], chats:[], calls:[] };
     let activeGroup = 'All';
     let autoRefreshTimer = null;
-    const AUTO_REFRESH_MS = 15 * 60 * 1000; // 15 minutes
+    let pendingDownload = null; // { type: 'filtered'|'tickets'|'chats'|'calls', data: ... }
 
     /******************************************************************
-     * UTILIDADES CSV / PARSE / NORMALIZACIÓN
+     * Utilidades: CSV parse y helpers
      ******************************************************************/
     function parseCSV(text){
       const rows = [];
@@ -384,7 +360,7 @@
     }
 
     /******************************************************************
-     * Agregación de counts (sin detalles). Detalles se generan on-demand.
+     * Agregación de counts (sin detalles). Detalles on-demand.
      ******************************************************************/
     function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
       const counts = {};
@@ -507,7 +483,9 @@
           callPts: Number(callPts.toFixed(2)),
           chats: c.chats,
           chatPts: Number(chatPts.toFixed(2)),
-          total: Number(total.toFixed(2))
+          total: Number(total.toFixed(2)),
+          group: metaMap[name] ? metaMap[name].group : 'OTROS',
+          supervisor: metaMap[name] ? metaMap[name].supervisor : 'OTROS'
         };
       });
       arr.sort((a,b) => b.total - a.total);
@@ -541,8 +519,8 @@
         tr.innerHTML = `
           <td><div class="${posClass}">${idx+1}</div></td>
           <td>
-            <div class="advisor-name">${escapeHtml(row.name)}${''}</div>
-            <div class="meta-small">${metaMap[row.name] ? metaMap[row.name].group + ' · ' + (metaMap[row.name].supervisor || '') : ''}</div>
+            <div class="advisor-name">${escapeHtml(row.name)}</div>
+            <div class="meta-small">${escapeHtml(row.group)} · ${escapeHtml(row.supervisor)}</div>
           </td>
           <td><div class="vol">${row.tickets}</div><div class="meta-small">${row.ticketPts} pts</div></td>
           <td><div class="vol">${row.calls}</div><div class="meta-small">${row.callPts} pts</div></td>
@@ -558,7 +536,6 @@
         if(rows[0]) rows[0].classList.add('top-highlight-1');
         if(rows[1]) rows[1].classList.add('top-highlight-2');
         if(rows[2]) rows[2].classList.add('top-highlight-3');
-        // add badges to first three name cells
         for(let i=0;i<3;i++){
           const row = rows[i];
           if(!row) continue;
@@ -574,165 +551,7 @@
     }
 
     /******************************************************************
-     * Modal protegido y detalles on-demand (mantener funcionalidad)
-     ******************************************************************/
-    const SECRET_CODE = 'SUPER';
-    function showLoading(){ document.getElementById('loadingOverlay').style.display = 'flex'; }
-    function hideLoading(){ document.getElementById('loadingOverlay').style.display = 'none'; }
-
-    function showModal(){ document.getElementById('modalBackdrop').style.display = 'flex'; }
-    function hideModal(){
-      document.getElementById('modalBackdrop').style.display = 'none';
-      document.getElementById('authArea').style.display = 'flex';
-      document.getElementById('detailsArea').style.display = 'none';
-      document.getElementById('secretInput').value = '';
-      document.getElementById('authMsg').textContent = '';
-      const tbody = document.getElementById('detailsTable').querySelector('tbody');
-      if(tbody) tbody.innerHTML = '';
-    }
-    document.getElementById('modalClose').addEventListener('click', hideModal);
-    document.getElementById('modalBackdrop').addEventListener('click', (e) => { if(e.target.id === 'modalBackdrop') hideModal(); });
-
-    function isAuthorized(){ try{ return sessionStorage.getItem('authorized') === '1'; } catch(e){ return false; } }
-    function setAuthorized(){ try{ sessionStorage.setItem('authorized','1'); } catch(e){} }
-
-    // buildAndRenderDetails kept minimal (used only when authorized and requested)
-    async function buildAndRenderDetails(canonicalName, type){
-      document.getElementById('authArea').style.display = 'none';
-      document.getElementById('detailsArea').style.display = 'none';
-      showLoading();
-      await new Promise(resolve => setTimeout(resolve, 150));
-      const list = [];
-      const { fromDateOnly, toDateOnly } = getPeriodRange();
-      const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
-      const selectedSupervisor = selectedSupervisorRaw || '';
-
-      function passesMeta(advisorCanonical){
-        const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
-        if(activeGroup !== 'All' && meta.group !== activeGroup) return false;
-        if(selectedSupervisor){
-          if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) return false;
-        }
-        return true;
-      }
-
-      // scan tickets
-      if(type === 'tickets' || type === 'all'){
-        const rows = cache.tickets || [];
-        for(let r=1; r<rows.length; r++){
-          const row = rows[r];
-          const rawAdvisor = (row[COL.tickets.advisor] || '');
-          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-          if(!advisorCanonical) continue;
-          if(advisorCanonical !== canonicalName) continue;
-          if(!passesMeta(advisorCanonical)) continue;
-          const rawStatus = (row[COL.tickets.status] || '').trim().toUpperCase();
-          if(rawStatus !== 'CANALIZADO') continue;
-          const rawDate = row[COL.tickets.date];
-          const parsed = parseDateFlexible(rawDate);
-          if((fromDateOnly || toDateOnly) && parsed){
-            const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-            if(fromDateOnly && dd < fromDateOnly) continue;
-            if(toDateOnly && dd > toDateOnly) continue;
-          }
-          list.push({
-            tipo: 'Ticket',
-            fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
-            asesor_raw: rawAdvisor,
-            estado: rawStatus || '',
-            duracion: '',
-            info: row.join(' | ')
-          });
-        }
-      }
-
-      // scan chats
-      if(type === 'chats' || type === 'all'){
-        const rows = cache.chats || [];
-        for(let r=1; r<rows.length; r++){
-          const row = rows[r];
-          const rawAdvisor = (row[COL.chats.advisor] || '');
-          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-          if(!advisorCanonical) continue;
-          if(advisorCanonical !== canonicalName) continue;
-          if(!passesMeta(advisorCanonical)) continue;
-          const rawDuration = row[COL.chats.duration];
-          const seconds = durationToSeconds(rawDuration);
-          if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
-          if(seconds > 300) continue;
-          const rawAgent = (row[COL.chats.agentFlag] || '').trim().toUpperCase();
-          if(rawAgent !== 'AGENT') continue;
-          const rawDate = row[COL.chats.date];
-          const parsed = parseDateFlexible(rawDate);
-          if((fromDateOnly || toDateOnly) && parsed){
-            const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-            if(fromDateOnly && dd < fromDateOnly) continue;
-            if(toDateOnly && dd > toDateOnly) continue;
-          }
-          list.push({
-            tipo: 'Chat',
-            fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
-            asesor_raw: rawAdvisor,
-            estado: rawAgent || '',
-            duracion: rawDuration || '',
-            info: row.join(' | ')
-          });
-        }
-      }
-
-      // scan calls
-      if(type === 'calls' || type === 'all'){
-        const rows = cache.calls || [];
-        for(let r=1; r<rows.length; r++){
-          const row = rows[r];
-          const rawAdvisor = (row[COL.calls.advisor] || '');
-          const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-          if(!advisorCanonical) continue;
-          if(advisorCanonical !== canonicalName) continue;
-          if(!passesMeta(advisorCanonical)) continue;
-          const rawStatus = (row[COL.calls.status] || '').trim().toLowerCase();
-          if(rawStatus !== 'completed') continue;
-          const rawDuration = row[COL.calls.duration];
-          const seconds = durationToSeconds(rawDuration);
-          if(seconds <= 35) continue;
-          const rawDate = row[COL.calls.date];
-          const parsed = parseDateFlexible(rawDate);
-          if((fromDateOnly || toDateOnly) && parsed){
-            const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-            if(fromDateOnly && dd < fromDateOnly) continue;
-            if(toDateOnly && dd > toDateOnly) continue;
-          }
-          list.push({
-            tipo: 'Llamada',
-            fecha: parsed ? parsed.toISOString().slice(0,10) : (rawDate||''),
-            asesor_raw: rawAdvisor,
-            estado: rawStatus || '',
-            duracion: rawDuration || '',
-            info: row.join(' | ')
-          });
-        }
-      }
-
-      hideLoading();
-      // render
-      document.getElementById('detailsHeader').textContent = `${canonicalName} — ${type}`;
-      const tbody = document.getElementById('detailsTable').querySelector('tbody');
-      tbody.innerHTML = '';
-      if(!list.length){
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay registros para mostrar</td></tr>';
-      } else {
-        list.forEach(item => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${escapeHtml(item.tipo)}</td><td>${escapeHtml(item.fecha)}</td><td>${escapeHtml(item.asesor_raw)}</td><td>${escapeHtml(item.estado)}</td><td>${escapeHtml(item.duracion)}</td><td>${escapeHtml(item.info)}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
-      document.getElementById('authArea').style.display = 'none';
-      document.getElementById('detailsArea').style.display = 'block';
-    }
-
-    /******************************************************************
-     * Export crudos completos
+     * Descargas: vista filtrada y crudos (con solicitud de clave cada vez)
      ******************************************************************/
     function rowsToCSV(rows){
       return rows.map(r => r.map(cell => {
@@ -741,6 +560,7 @@
         return `"${s}"`;
       }).join(',')).join('\n');
     }
+
     function downloadCSV(text, filename){
       const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -753,28 +573,65 @@
       URL.revokeObjectURL(url);
     }
 
-    document.getElementById('exportTickets').addEventListener('click', () => {
-      if(!cache.tickets || cache.tickets.length === 0){ alert('No hay datos de Tickets en cache. Refresca.'); return; }
-      const csv = rowsToCSV(cache.tickets);
-      downloadCSV(csv, `Tickets_BD_full.csv`);
-    });
-    document.getElementById('exportChats').addEventListener('click', () => {
-      if(!cache.chats || cache.chats.length === 0){ alert('No hay datos de Chats en cache. Refresca.'); return; }
-      const csv = rowsToCSV(cache.chats);
-      downloadCSV(csv, `Chats_BD_full.csv`);
-    });
-    document.getElementById('exportCalls').addEventListener('click', () => {
-      if(!cache.calls || cache.calls.length === 0){ alert('No hay datos de Llamadas en cache. Refresca.'); return; }
-      const csv = rowsToCSV(cache.calls);
-      downloadCSV(csv, `Llamadas_BD_full.csv`);
-    });
+    // Construye CSV de la vista filtrada (lo que se muestra en leaderboard)
+    function buildFilteredCSV(scores){
+      const header = ['Pos','Asesor','Grupo','Supervisor','Tickets','TicketPts','Llamadas','CallPts','Chats','ChatPts','PuntajeTotal'];
+      const rows = [header];
+      scores.forEach((s, idx) => {
+        rows.push([idx+1, s.name, s.group, s.supervisor, s.tickets, s.ticketPts, s.calls, s.callPts, s.chats, s.chatPts, s.total]);
+      });
+      return rowsToCSV(rows);
+    }
+
+    // Handlers para export crudos (piden clave)
+    function requestDownload(type, data){
+      pendingDownload = { type, data };
+      openPasswordModal();
+    }
+
+    function openPasswordModal(){
+      document.getElementById('modalBackdrop').style.display = 'flex';
+      document.getElementById('downloadPassword').value = '';
+      document.getElementById('modalMsg').textContent = '';
+      document.getElementById('downloadPassword').focus();
+    }
+
+    function closePasswordModal(){
+      document.getElementById('modalBackdrop').style.display = 'none';
+      pendingDownload = null;
+    }
+
+    async function confirmDownloadAction(){
+      const val = (document.getElementById('downloadPassword').value || '').trim();
+      if(!val){
+        document.getElementById('modalMsg').textContent = 'Introduce la clave';
+        return;
+      }
+      if(val !== SECRET_CODE){
+        document.getElementById('modalMsg').textContent = 'Clave incorrecta';
+        return;
+      }
+      // clave correcta: ejecutar descarga según pendingDownload
+      const pd = pendingDownload;
+      if(!pd){ closePasswordModal(); return; }
+      if(pd.type === 'filtered'){
+        downloadCSV(pd.data.csv, pd.data.filename);
+      } else if(pd.type === 'tickets'){
+        downloadCSV(pd.data.csv, pd.data.filename);
+      } else if(pd.type === 'chats'){
+        downloadCSV(pd.data.csv, pd.data.filename);
+      } else if(pd.type === 'calls'){
+        downloadCSV(pd.data.csv, pd.data.filename);
+      }
+      closePasswordModal();
+    }
 
     /******************************************************************
-     * Auto-refresh (datos solamente) y carga inicial
+     * Refresh de datos (solo datos) y flujo principal
      ******************************************************************/
     async function refreshDataOnly(){
       try{
-        // fetch raw sheets and update cache, then recompute counts and re-render
+        showLoading();
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.tickets),
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.chats),
@@ -783,12 +640,12 @@
         cache.tickets = ticketsRows;
         cache.chats = chatsRows;
         cache.calls = callsRows;
-        // update last sync time
         document.getElementById('lastSync').textContent = formatHHmm(new Date());
-        // recompute counts and render
         applyFiltersAndRender();
       } catch(err){
         console.warn('Error al refrescar datos:', err.message);
+      } finally{
+        hideLoading();
       }
     }
 
@@ -796,7 +653,7 @@
       try{
         renderSkeletonRows();
         showLoading();
-        // set default period to "Este Mes" on load
+        // default period: Este Mes
         document.getElementById('periodSelector').value = 'thisMonth';
         const { fromDateOnly, toDateOnly } = getPeriodRange();
         if(fromDateOnly) document.getElementById('dateFrom').value = fromDateOnly.toISOString().slice(0,10);
@@ -805,7 +662,6 @@
         document.getElementById('lastSync').textContent = formatHHmm(new Date());
         await buildAliasAndMetaMaps();
         populateSupervisorFilter();
-        // initial fetch and cache
         const [ticketsRows, chatsRows, callsRows] = await Promise.all([
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.tickets),
           fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.chats),
@@ -815,7 +671,8 @@
         cache.chats = chatsRows;
         cache.calls = callsRows;
         applyFiltersAndRender();
-        // start auto-refresh timer for data only
+
+        // start auto-refresh timer (datos solamente)
         if(autoRefreshTimer) clearInterval(autoRefreshTimer);
         autoRefreshTimer = setInterval(() => {
           refreshDataOnly();
@@ -885,6 +742,8 @@
       const scores = calculateScoresFromCountsSum(counts);
       updateSideStats(counts);
       renderLeaderboard(scores);
+      // store last rendered scores for filtered download
+      window.__lastRenderedScores = scores;
     }
 
     function updateSideStats(counts){
@@ -899,7 +758,7 @@
     }
 
     /******************************************************************
-     * Eventos UI
+     * UI events and download wiring
      ******************************************************************/
     document.getElementById('applyFilters').addEventListener('click', () => applyFiltersAndRender());
     document.getElementById('refreshBtn').addEventListener('click', () => refreshDataOnly());
@@ -923,14 +782,56 @@
       });
     });
 
-    // init
-    loadAndRender();
+    // Download filtered view (requires password each time)
+    document.getElementById('downloadFiltered').addEventListener('click', () => {
+      const scores = window.__lastRenderedScores || [];
+      const csv = buildFilteredCSV(scores);
+      const now = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      const filename = `leaderboard_filtrado_${now}.csv`;
+      pendingDownload = { type: 'filtered', data: { csv, filename } };
+      openPasswordModal();
+    });
+
+    // Export crudos (each requires password)
+    document.getElementById('exportTickets').addEventListener('click', () => {
+      if(!cache.tickets || cache.tickets.length === 0){ alert('No hay datos de Tickets en cache. Refresca.'); return; }
+      const csv = rowsToCSV(cache.tickets);
+      const filename = `Tickets_BD_full.csv`;
+      pendingDownload = { type: 'tickets', data: { csv, filename } };
+      openPasswordModal();
+    });
+    document.getElementById('exportChats').addEventListener('click', () => {
+      if(!cache.chats || cache.chats.length === 0){ alert('No hay datos de Chats en cache. Refresca.'); return; }
+      const csv = rowsToCSV(cache.chats);
+      const filename = `Chats_BD_full.csv`;
+      pendingDownload = { type: 'chats', data: { csv, filename } };
+      openPasswordModal();
+    });
+    document.getElementById('exportCalls').addEventListener('click', () => {
+      if(!cache.calls || cache.calls.length === 0){ alert('No hay datos de Llamadas en cache. Refresca.'); return; }
+      const csv = rowsToCSV(cache.calls);
+      const filename = `Llamadas_BD_full.csv`;
+      pendingDownload = { type: 'calls', data: { csv, filename } };
+      openPasswordModal();
+    });
+
+    // Modal controls
+    document.getElementById('modalClose').addEventListener('click', closePasswordModal);
+    document.getElementById('confirmDownload').addEventListener('click', confirmDownloadAction);
+    document.getElementById('downloadPassword').addEventListener('keydown', (e) => { if(e.key === 'Enter') confirmDownloadAction(); });
 
     /******************************************************************
-     * Aux helpers
+     * Helpers: loading, escape, format
      ******************************************************************/
+    function showLoading(){ document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoading(){ document.getElementById('loadingOverlay').style.display = 'none'; }
     function escapeHtml(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function formatHHmm(date){ const d=new Date(date); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+    /******************************************************************
+     * Inicialización
+     ******************************************************************/
+    loadAndRender();
   </script>
 </body>
 </html>
