@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard Asesores — Grupos y Vista por Supervisor</title>
+  <title>Dashboard Asesores — Metas primero</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
@@ -81,9 +81,6 @@
     .goal-block{padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(31,31,31,0.03);margin-bottom:8px}
     .goal-title{font-weight:800;margin-bottom:6px}
     .goal-item{font-size:14px;margin:4px 0}
-    .supervisor-view{margin-top:12px;border-top:1px solid rgba(31,31,31,0.04);padding-top:12px}
-    .sup-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#fff;border:1px solid rgba(31,31,31,0.03);margin-bottom:8px}
-    .sup-name{font-weight:800}
     footer{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
   </style>
 </head>
@@ -94,7 +91,7 @@
         <div class="logo">AS</div>
         <div>
           <h1>Indicadores Asesores</h1>
-          <div class="subtitle">Grupos, metas y vista por supervisor</div>
+          <div class="subtitle">Metas primero · Descargas protegidas</div>
         </div>
       </div>
       <div style="text-align:right">
@@ -176,29 +173,9 @@
       </section>
 
       <aside class="card">
-        <h2>Estadísticas y export</h2>
-        <div class="stats" aria-hidden="false">
-          <div class="stat"><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
-          <div class="stat"><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div>
-          <div class="stat"><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div>
-          <div class="stat"><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div>
-        </div>
+        <h2>Metas</h2>
 
-        <div style="margin-top:12px;border-top:1px solid rgba(31,31,31,0.04);padding-top:12px">
-          <h3 style="margin:0 0 8px 0;font-size:14px;color:var(--muted)">Exportar tablas crudas</h3>
-          <div class="export-actions">
-            <button class="small-btn" id="exportTickets">Exportar Tickets (CSV)</button>
-            <button class="small-btn" id="exportChats">Exportar Chats (CSV)</button>
-            <button class="small-btn" id="exportCalls">Exportar Llamadas (CSV)</button>
-          </div>
-          <div style="margin-top:10px;font-size:12px;color:var(--muted)">
-            Cada exportación solicita la clave. Si quieres que las exportaciones no pidan clave, puedo cambiarlo.
-          </div>
-        </div>
-
-        <div class="goals">
-          <h3 style="margin:0 0 8px 0;font-size:14px;color:var(--muted)">Metas</h3>
-
+        <div class="goals" aria-live="polite">
           <div class="goal-block" aria-label="Modalidad Presencial">
             <div class="goal-title">🏢 MODALIDAD PRESENCIAL</div>
             <div class="goal-item">🔴 Tickets: <strong id="goal_pres_tickets">430</strong></div>
@@ -218,11 +195,25 @@
           </div>
         </div>
 
-        <div class="supervisor-view">
-          <h3 style="margin:8px 0 8px 0;font-size:14px;color:var(--muted)">Vista por supervisor</h3>
-          <div class="sup-row"><div class="sup-name">IVAN GERARDO MORENO GARATACHEA</div><div id="supIvan" class="meta-small">Tickets: -- · Llamadas: -- · Chats: --</div></div>
-          <div class="sup-row"><div class="sup-name">CECILIA CARRERA MORALES</div><div id="supCecilia" class="meta-small">Tickets: -- · Llamadas: -- · Chats: --</div></div>
-          <div class="sup-row"><div class="sup-name">OTROS</div><div id="supOtros" class="meta-small">Tickets: -- · Llamadas: -- · Chats: --</div></div>
+        <div style="margin-top:12px;border-top:1px solid rgba(31,31,31,0.04);padding-top:12px">
+          <h3 style="margin:0 0 8px 0;font-size:14px;color:var(--muted)">Estadísticas y export</h3>
+          <div class="stats" aria-hidden="false">
+            <div class="stat"><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
+            <div class="stat"><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div>
+            <div class="stat"><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div>
+            <div class="stat"><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="export-actions">
+              <button class="small-btn" id="exportTickets">Exportar Tickets (CSV)</button>
+              <button class="small-btn" id="exportChats">Exportar Chats (CSV)</button>
+              <button class="small-btn" id="exportCalls">Exportar Llamadas (CSV)</button>
+            </div>
+            <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+              Cada exportación solicita la clave. Si quieres que las exportaciones no pidan clave, puedo cambiarlo.
+            </div>
+          </div>
         </div>
       </aside>
     </div>
@@ -716,92 +707,6 @@
     }
 
     /******************************************************************
-     * Supervisor summary (solo IVAN, CECILIA y OTROS)
-     ******************************************************************/
-    function computeSupervisorSummary(){
-      const supBuckets = {
-        "IVAN GERARDO MORENO GARATACHEA": { tickets:0, calls:0, chats:0 },
-        "CECILIA CARRERA MORALES": { tickets:0, calls:0, chats:0 },
-        "OTROS": { tickets:0, calls:0, chats:0 }
-      };
-      const { fromDateOnly, toDateOnly } = getPeriodRange();
-
-      function inRange(parsed){
-        if(!parsed) return false;
-        const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-        if(fromDateOnly && dd < fromDateOnly) return false;
-        if(toDateOnly && dd > toDateOnly) return false;
-        return true;
-      }
-
-      // Tickets
-      const tickets = cache.tickets || [];
-      for(let r=1; r<tickets.length; r++){
-        const row = tickets[r];
-        const rawAdvisor = row[COL.tickets.advisor] || '';
-        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-        if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
-        const sup = (meta.supervisor || 'OTROS').toUpperCase();
-        const status = String(row[COL.tickets.status] || '').trim().toUpperCase();
-        if(status !== 'CANALIZADO') continue;
-        const parsed = parseDateFlexible(row[COL.tickets.date]);
-        if((fromDateOnly || toDateOnly) && parsed && !inRange(parsed)) continue;
-        if((fromDateOnly || toDateOnly) && !parsed) continue;
-        const key = (sup === "IVAN GERARDO MORENO GARATACHEA" || sup === "CECILIA CARRERA MORALES") ? sup : "OTROS";
-        supBuckets[key].tickets += 1;
-      }
-
-      // Chats
-      const chats = cache.chats || [];
-      for(let r=1; r<chats.length; r++){
-        const row = chats[r];
-        const rawAdvisor = row[COL.chats.advisor] || '';
-        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-        if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
-        const sup = (meta.supervisor || 'OTROS').toUpperCase();
-        const rawDuration = row[COL.chats.duration];
-        const seconds = durationToSeconds(rawDuration);
-        if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
-        if(seconds > 300) continue;
-        const agentFlag = String(row[COL.chats.agentFlag] || '').trim().toUpperCase();
-        if(agentFlag !== 'AGENT') continue;
-        const parsed = parseDateFlexible(row[COL.chats.date]);
-        if((fromDateOnly || toDateOnly) && parsed && !inRange(parsed)) continue;
-        if((fromDateOnly || toDateOnly) && !parsed) continue;
-        const key = (sup === "IVAN GERARDO MORENO GARATACHEA" || sup === "CECILIA CARRERA MORALES") ? sup : "OTROS";
-        supBuckets[key].chats += 1;
-      }
-
-      // Calls
-      const calls = cache.calls || [];
-      for(let r=1; r<calls.length; r++){
-        const row = calls[r];
-        const rawAdvisor = row[COL.calls.advisor] || '';
-        const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-        if(!advisorCanonical) continue;
-        const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
-        const sup = (meta.supervisor || 'OTROS').toUpperCase();
-        const status = String(row[COL.calls.status] || '').trim().toLowerCase();
-        if(status !== 'completed') continue;
-        const rawDuration = row[COL.calls.duration];
-        const seconds = durationToSeconds(rawDuration);
-        if(seconds <= 35) continue;
-        const parsed = parseDateFlexible(row[COL.calls.date]);
-        if((fromDateOnly || toDateOnly) && parsed && !inRange(parsed)) continue;
-        if((fromDateOnly || toDateOnly) && !parsed) continue;
-        const key = (sup === "IVAN GERARDO MORENO GARATACHEA" || sup === "CECILIA CARRERA MORALES") ? sup : "OTROS";
-        supBuckets[key].calls += 1;
-      }
-
-      // render into UI
-      document.getElementById('supIvan').textContent = `Tickets: ${supBuckets["IVAN GERARDO MORENO GARATACHEA"].tickets} · Llamadas: ${supBuckets["IVAN GERARDO MORENO GARATACHEA"].calls} · Chats: ${supBuckets["IVAN GERARDO MORENO GARATACHEA"].chats}`;
-      document.getElementById('supCecilia').textContent = `Tickets: ${supBuckets["CECILIA CARRERA MORALES"].tickets} · Llamadas: ${supBuckets["CECILIA CARRERA MORALES"].calls} · Chats: ${supBuckets["CECILIA CARRERA MORALES"].chats}`;
-      document.getElementById('supOtros').textContent = `Tickets: ${supBuckets["OTROS"].tickets} · Llamadas: ${supBuckets["OTROS"].calls} · Chats: ${supBuckets["OTROS"].chats}`;
-    }
-
-    /******************************************************************
      * Refresh datos (solo datos) y flujo principal
      ******************************************************************/
     async function refreshDataOnly(){
@@ -916,7 +821,7 @@
       updateSideStats(counts);
       renderLeaderboard(scores);
       window.__lastRenderedScores = scores;
-      computeSupervisorSummary();
+      // Note: supervisor summary view was removed as requested
     }
 
     function updateSideStats(counts){
