@@ -6,11 +6,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
 :root{
---bg:#F6F7FB; --card:#FFFFFF; --muted:#6B6B6B; --text:#1F1F23; --accent:#F28F17;
---accent-2:#FFB86B; --border:rgba(31,31,31,0.06); --radius:12px; --shadow:0 10px 30px rgba(31,31,31,0.06);
---top1:linear-gradient(90deg,#FFD966,#FFB86B);
---top2:linear-gradient(90deg,#E6E6E6,#FFDDAA);
---top3:linear-gradient(90deg,#F0F0F0,#FFEFD5);
+  --bg:#F6F7FB; --card:#FFFFFF; --muted:#6B6B6B; --text:#1F1F23; --accent:#F28F17;
+  --accent-2:#FFB86B; --border:rgba(31,31,31,0.06); --radius:12px; --shadow:0 10px 30px rgba(31,31,31,0.06);
+  --top1:linear-gradient(90deg,#FFD966,#FFB86B);
+  --top2:linear-gradient(90deg,#E6E6E6,#FFDDAA);
+  --top3:linear-gradient(90deg,#F0F0F0,#FFEFD5);
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
@@ -73,156 +73,158 @@ footer{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
 </head>
 <body>
 <div class="container">
-<header>
-<div class="brand">
-<div class="logo">AS</div>
-<div>
-<h1>Indicadores Asesores</h1>
-<div class="subtitle">Metas primero · Descargas protegidas</div>
-</div>
-</div>
-<div style="text-align:right">
-<div style="font-size:13px;color:var(--muted)">Última sincronización</div>
-<div id="lastSync" style="font-weight:800;color:var(--text);margin-top:6px">--:--</div>
-</div>
-</header>
+  <header>
+    <div class="brand">
+      <div class="logo">AS</div>
+      <div>
+        <h1>Indicadores Asesores</h1>
+        <div class="subtitle">Metas primero · Descargas protegidas</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;color:var(--muted)">Última sincronización</div>
+      <div id="lastSync" style="font-weight:800;color:var(--text);margin-top:6px">--:--</div>
+    </div>
+  </header>
 
-<div class="controls">
-<div class="control">
-<label>Periodo</label>
-<select id="periodSelector" aria-label="Periodo">
-<option value="custom">Personalizado</option>
-<option value="today">Hoy</option>
-<option value="thisMonth">Este Mes</option>
-<option value="lastMonth">Mes Pasado</option>
-</select>
-</div>
-<div class="control">
-<label>Fecha inicio</label>
-<input type="date" id="dateFrom" aria-label="Fecha inicio">
-</div>
-<div class="control">
-<label>Fecha fin</label>
-<input type="date" id="dateTo" aria-label="Fecha fin">
-</div>
-<div class="control" style="min-width:220px">
-<label>Supervisor</label>
-<select id="filterSupervisor" aria-label="Supervisor">
-<option value="">Todos los supervisores</option>
-</select>
-</div>
-<div class="actions">
-<button class="primary" id="applyFilters">Aplicar</button>
-<button class="ghost" id="refreshBtn" title="Refrescar datos">Refrescar</button>
-</div>
-</div>
+  <div class="controls">
+    <div class="control">
+      <label>Periodo</label>
+      <select id="periodSelector" aria-label="Periodo">
+        <option value="custom">Personalizado</option>
+        <option value="today">Hoy</option>
+        <option value="thisMonth">Este Mes</option>
+        <option value="lastMonth">Mes Pasado</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>Fecha inicio</label>
+      <input type="date" id="dateFrom" aria-label="Fecha inicio">
+    </div>
+    <div class="control">
+      <label>Fecha fin</label>
+      <input type="date" id="dateTo" aria-label="Fecha fin">
+    </div>
+    <div class="control" style="min-width:220px">
+      <label>Supervisor</label>
+      <select id="filterSupervisor" aria-label="Supervisor">
+        <option value="">Todos los supervisores</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button class="primary" id="applyFilters">Aplicar</button>
+      <button class="ghost" id="refreshBtn" title="Refrescar datos">Refrescar</button>
+    </div>
+  </div>
 
-<div class="tabs" role="tablist" aria-label="Grupos">
-<div class="tab active" data-group="All">Todos</div>
-<div class="tab" data-group="Vento">Vento</div>
-<div class="tab" data-group="Piston">Piston</div>
-<div class="tab" data-group="Home Office">Home Office</div>
-<div class="tab" data-group="Nuevo ingreso">Nuevo ingreso</div>
-<div class="tab" data-group="OTROS">OTROS</div>
-</div>
+  <div class="tabs" role="tablist" aria-label="Grupos">
+    <div class="tab active" data-group="All">Todos</div>
+    <div class="tab" data-group="Vento">Vento</div>
+    <div class="tab" data-group="Piston">Piston</div>
+    <div class="tab" data-group="Home Office">Home Office</div>
+    <div class="tab" data-group="Nuevo ingreso">Nuevo ingreso</div>
+    <div class="tab" data-group="OTROS">OTROS</div>
+  </div>
 
-<div class="main-grid">
-<section class="card">
-<h2>Leaderboard</h2>
-<div class="table-wrap" role="table" aria-label="Leaderboard">
-<table id="leaderboardTable" role="grid" aria-live="polite">
-<thead>
-<tr>
-<th>Pos</th>
-<th>Asesor</th>
-<th>Tickets<br><span class="meta-small">Vol / Pts</span></th>
-<th>Llamadas<br><span class="meta-small">Vol / Pts</span></th>
-<th>Chats<br><span class="meta-small">Vol / Pts</span></th>
-<th>Puntaje Total</th>
-</tr>
-</thead>
-<tbody id="leaderboardBody"></tbody>
-</table>
-</div>
+  <div class="main-grid">
+    <section class="card">
+      <h2>Leaderboard</h2>
+      <div class="table-wrap" role="table" aria-label="Leaderboard">
+        <table id="leaderboardTable" role="grid" aria-live="polite">
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Asesor</th>
+              <th>Tickets<br><span class="meta-small">Vol / Pts</span></th>
+              <th>Llamadas<br><span class="meta-small">Vol / Pts</span></th>
+              <th>Chats<br><span class="meta-small">Vol / Pts</span></th>
+              <th>Puntaje Total</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
 
-<div style="margin-top:10px;color:var(--muted);font-size:13px">
-Reglas: tickets canalizados (col M = CANALIZADO). Llamadas completed y duración &gt;35s. Chats duración ≤5min y agent flag = AGENT. Nombres consolidados por Asesores; sin grupo → OTROS.
-</div>
+      <div style="margin-top:10px;color:var(--muted);font-size:13px" id="rulesText">
+        Reglas: tickets canalizados (col M = CANALIZADO). Llamadas completed y duración &gt;35s. Chats duración ≤5min y agent flag = AGENT. Nombres consolidados por Asesores; sin grupo → OTROS.
+      </div>
 
-<div style="display:flex;gap:8px;margin-top:12px;align-items:center">
-<button class="small-btn" id="downloadFiltered">Descargar datos filtrados (raw CSV)</button>
-<div style="font-size:12px;color:var(--muted);margin-left:8px">Descarga protegida por clave cada vez que se solicita</div>
-</div>
-</section>
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+        <button class="small-btn" id="downloadFiltered">Descargar datos filtrados (raw CSV)</button>
+        <div style="font-size:12px;color:var(--muted);margin-left:8px">Descarga protegida por clave cada vez que se solicita</div>
+      </div>
+    </section>
 
-<aside class="card">
-<h2>Metas</h2>
-<div class="goals" aria-live="polite">
-<div class="goal-block" aria-label="Modalidad Presencial">
-<div class="goal-title">🏢 MODALIDAD PRESENCIAL</div>
-<div class="goal-item">🔴 Tickets: <strong id="goal_pres_tickets">430</strong></div>
-<div class="goal-item">⚪ Chats: <strong id="goal_pres_chats">310</strong></div>
-<div class="goal-item">⚫ Llamadas: <strong id="goal_pres_calls">363</strong></div>
-</div>
-<div class="goal-block" aria-label="Modalidad Home Office">
-<div class="goal-title">🏡 MODALIDAD HOME OFFICE</div>
-<div class="goal-item">⚫ Tickets: <strong id="goal_ho_tickets">514</strong></div>
-<div class="goal-item">⚪ Chats: <strong id="goal_ho_chats">2015</strong></div>
-</div>
-<div class="goal-block" aria-label="Meta general">
-<div class="goal-title">🎯 META GENERAL</div>
-<div class="goal-item">🏁 Total de Tickets: <strong id="goal_general">menos de 500</strong></div>
-</div>
-</div>
+    <aside class="card">
+      <h2>Metas</h2>
+      <div class="goals" aria-live="polite">
+        <div class="goal-block" aria-label="Modalidad Presencial">
+          <div class="goal-title">🏢 MODALIDAD PRESENCIAL</div>
+          <div class="goal-item">🔴 Tickets: <strong id="goal_pres_tickets">430</strong></div>
+          <div class="goal-item">⚪ Chats: <strong id="goal_pres_chats">310</strong></div>
+          <div class="goal-item">⚫ Llamadas: <strong id="goal_pres_calls">363</strong></div>
+        </div>
+        <div class="goal-block" aria-label="Modalidad Home Office">
+          <div class="goal-title">🏡 MODALIDAD HOME OFFICE</div>
+          <div class="goal-item">⚫ Tickets: <strong id="goal_ho_tickets">514</strong></div>
+          <div class="goal-item">⚪ Chats: <strong id="goal_ho_chats">2015</strong></div>
+        </div>
+        <div class="goal-block" aria-label="Meta general">
+          <div class="goal-title">🎯 META GENERAL</div>
+          <div class="goal-item">🏁 Total de Tickets: <strong id="goal_general">menos de 500</strong></div>
+        </div>
+      </div>
 
-<div style="margin-top:12px;border-top:1px solid rgba(31,31,31,0.04);padding-top:12px">
-<h3 style="margin:0 0 8px 0;font-size:14px;color:var(--muted)">Estadísticas y export</h3>
-<div class="stats" aria-hidden="false">
-<div class="stat"><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
-<div class="stat"><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div>
-<div class="stat"><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div>
-<div class="stat"><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div>
-</div>
+      <div style="margin-top:12px;border-top:1px solid rgba(31,31,31,0.04);padding-top:12px">
+        <h3 style="margin:0 0 8px 0;font-size:14px;color:var(--muted)">Estadísticas y export</h3>
+        <div class="stats" aria-hidden="false">
+          <div class="stat"><div class="label">Asesores</div><div class="value" id="statAdvisors">--</div></div>
+          <div class="stat"><div class="label">Tickets canalizados</div><div class="value" id="statTickets">--</div></div>
+          <div class="stat"><div class="label">Llamadas válidas</div><div class="value" id="statCalls">--</div></div>
+          <div class="stat"><div class="label">Chats válidos</div><div class="value" id="statChats">--</div></div>
+        </div>
 
-<div style="margin-top:12px">
-<div class="export-actions">
-<button class="small-btn" id="exportTickets">Exportar Tickets (CSV)</button>
-<button class="small-btn" id="exportChats">Exportar Chats (CSV)</button>
-<button class="small-btn" id="exportCalls">Exportar Llamadas (CSV)</button>
-</div>
+        <div style="margin-top:12px">
+          <div class="export-actions">
+            <button class="small-btn" id="exportTickets">Exportar Tickets (CSV)</button>
+            <button class="small-btn" id="exportChats">Exportar Chats (CSV)</button>
+            <button class="small-btn" id="exportCalls">Exportar Llamadas (CSV)</button>
+          </div>
 
-<div style="margin-top:10px;font-size:12px;color:var(--muted)">
-Cada exportación solicita la clave. Si quieres que las exportaciones no pidan clave, puedo cambiarlo.
-</div>
-</div>
-</aside>
-</div>
+          <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+            Cada exportación solicita la clave. Si quieres que las exportaciones no pidan clave, puedo cambiarlo.
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
 
-<footer>Interfaz optimizada · Actualización de datos cada 15 minutos · Descargas protegidas</footer>
+  <footer>Interfaz optimizada · Actualización de datos cada 15 minutos · Descargas protegidas</footer>
 </div>
 
 <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
-<div class="spinner" role="status" aria-live="polite"></div>
-<div class="loading-text">Cargando datos…</div>
+  <div class="spinner" role="status" aria-live="polite"></div>
+  <div class="loading-text">Cargando datos…</div>
 </div>
 
 <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
-<div class="modal" role="document" aria-labelledby="modalTitle">
-<button class="close" id="modalClose" aria-label="Cerrar">&times;</button>
-<h3 id="modalTitle">Clave requerida</h3>
-<div style="color:var(--muted);font-size:13px;margin-top:6px">Introduce la clave para autorizar la descarga. La clave se solicita cada vez.</div>
-<div class="row" style="margin-top:12px">
-<input id="downloadPassword" type="password" placeholder="Clave" aria-label="Clave de descarga">
-<button class="primary" id="confirmDownload">Validar y descargar</button>
-</div>
-<div id="modalMsg" style="margin-top:10px;color:var(--muted);font-size:13px"></div>
-</div>
+  <div class="modal" role="document" aria-labelledby="modalTitle">
+    <button class="close" id="modalClose" aria-label="Cerrar">&times;</button>
+    <h3 id="modalTitle">Clave requerida</h3>
+    <div style="color:var(--muted);font-size:13px;margin-top:6px">Introduce la clave para autorizar la descarga. La clave se solicita cada vez.</div>
+    <div class="row" style="margin-top:12px">
+      <input id="downloadPassword" type="password" placeholder="Clave" aria-label="Clave de descarga">
+      <button class="primary" id="confirmDownload">Validar y descargar</button>
+    </div>
+    <div id="modalMsg" style="margin-top:10px;color:var(--muted);font-size:13px"></div>
+  </div>
 </div>
 
 <script>
-/******************************************************************
-* CONFIG
-******************************************************************/
+/* =========================
+   CONFIG y UTILIDADES
+   ========================= */
+const DEBUG = true; // poner false en producción
 const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
 const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE';
 const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD', asesoresSheet: 'Asesores' };
@@ -231,26 +233,52 @@ const AUTO_REFRESH_MS = 15 * 60 * 1000;
 
 function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
 
-/* ---------------------------
-   COLUMN INDEXES (ACTUALIZADAS)
-   --------------------------- */
+/* Column mapping centralizado: ajustar si la hoja cambia */
 const COL = {
   tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), status: letterToIndex('M'), stateI: letterToIndex('I') },
-  chats: { advisor: letterToIndex('B'), duration: letterToIndex('C'), date: letterToIndex('I'), agentFlag: letterToIndex('M') },
-  calls: { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('G'), labelL: letterToIndex('L') },
-  asesores: { supervisor: letterToIndex('C'), username: letterToIndex('D'), group: letterToIndex('E') }
+  chats:   { advisor: letterToIndex('B'), duration: letterToIndex('C'), date: letterToIndex('I'), agentFlag: letterToIndex('M') },
+  calls:   { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('G'), labelL: letterToIndex('L') },
+  asesores:{ supervisor: letterToIndex('C'), username: letterToIndex('D'), group: letterToIndex('E') }
 };
 
 let aliasMap = {};
 let metaMap = {};
 let cache = { tickets:[], chats:[], calls:[] };
 let activeGroup = 'All';
-let autoRefreshTimer = null;
 let pendingDownload = null;
 
-/******************************************************************
-* UTILIDADES
-******************************************************************/
+/* Helpers */
+const norm = v => String(v || '').replace(/\u00A0/g,' ').replace(/\t/g,' ').trim().toUpperCase();
+const safeCell = (row, idx) => (row && idx >= 0 && idx < row.length) ? row[idx] : '';
+function durationToSeconds(s){
+  if(s === null || s === undefined) return 0;
+  const str = String(s).trim().toLowerCase();
+  if(!str) return 0;
+  let total = 0;
+  const mD = str.match(/(\d+)\s*d/); if(mD) total += parseInt(mD[1],10) * 86400;
+  const mH = str.match(/(\d+)\s*h/); if(mH) total += parseInt(mH[1],10) * 3600;
+  const mM = str.match(/(\d+)\s*m/); if(mM) total += parseInt(mM[1],10) * 60;
+  const mS = str.match(/(\d+)\s*s/); if(mS) total += parseInt(mS[1],10);
+  if(total === 0){
+    const onlyNum = str.match(/^(\d+)$/);
+    if(onlyNum) total = parseInt(onlyNum[1],10);
+  }
+  return total;
+}
+function parseDateFlexible(v){
+  if(v === null || v === undefined) return null;
+  const s = String(v).trim();
+  if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
+  const d1 = new Date(s);
+  if(!isNaN(d1.getTime())) return d1;
+  const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
+  const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
+  return null;
+}
+
+/* CSV parsing (robusto) */
 function parseCSV(text){
   const rows = [];
   let cur = '', row = [], inQuotes = false;
@@ -270,12 +298,39 @@ function parseCSV(text){
   if(cur !== '' || row.length) { row.push(cur); rows.push(row); }
   return rows;
 }
-
 function fetchSheetCSVRowsById(spreadsheetId, sheetName){
   const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
   return fetch(url).then(res => { if(!res.ok) throw new Error('Error al leer hoja ' + sheetName + ' (' + res.status + ')'); return res.text(); }).then(parseCSV);
 }
 
+/* =========================
+   Alias / meta maps
+   ========================= */
+async function buildAliasAndMetaMaps(){
+  aliasMap = {};
+  metaMap = {};
+  try{
+    const rows = await fetchSheetCSVRowsById(ASSESSORS_SPREADSHEET_ID, SHEETS.asesoresSheet);
+    for(let r=0; r<rows.length; r++){
+      const row = rows[r];
+      const rawUser = (row[COL.asesores.username] || '').trim();
+      const rawGroup = (row[COL.asesores.group] || '').trim();
+      const rawSupervisor = (row[COL.asesores.supervisor] || '').trim();
+      if(!rawUser) continue;
+      const keyNorm = normalizeForKey(rawUser);
+      const canonical = titleCase(keyNorm);
+      const group = rawGroup ? rawGroup : 'OTROS';
+      const supervisor = rawSupervisor ? rawSupervisor.toUpperCase() : 'OTROS';
+      metaMap[canonical] = { group, supervisor };
+      aliasMap[keyNorm] = canonical;
+      aliasMap[normalizeForKey(rawUser.replace(/\s+/g,' '))] = canonical;
+    }
+  } catch(err){
+    if(DEBUG) console.warn('No se pudo cargar Asesores sheet:', err.message);
+  }
+}
+
+/* Reuso de funciones del original (normalización de nombres) */
 function normalizeForKey(s){
   if(s === null || s === undefined) return '';
   let t = String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').trim();
@@ -297,132 +352,66 @@ function normalizeForKey(s){
   t = t.replace(/\s+/g,' ').trim();
   return t;
 }
-
 function titleCase(s){
   if(!s) return s;
   return s.toLowerCase().split(' ').map(w => w ? (w[0].toUpperCase() + w.slice(1)) : '').join(' ');
 }
-
-function durationToSeconds(s){
-  if(s === null || s === undefined) return 0;
-  const str = String(s).trim().toLowerCase();
-  if(!str) return 0;
-  let total = 0;
-  const mD = str.match(/(\d+)\s*d/); if(mD) total += parseInt(mD[1],10) * 86400;
-  const mH = str.match(/(\d+)\s*h/); if(mH) total += parseInt(mH[1],10) * 3600;
-  const mM = str.match(/(\d+)\s*m/); if(mM) total += parseInt(mM[1],10) * 60;
-  const mS = str.match(/(\d+)\s*s/); if(mS) total += parseInt(mS[1],10);
-  if(total === 0){
-    const onlyNum = str.match(/^(\d+)$/);
-    if(onlyNum) total = parseInt(onlyNum[1],10);
-  }
-  return total;
-}
-
-function parseDateFlexible(v){
-  if(v === null || v === undefined) return null;
-  const s = String(v).trim();
-  if(s === '' || s === '0' || s === '-' || s.toLowerCase() === 'null') return null;
-  const d1 = new Date(s);
-  if(!isNaN(d1.getTime())) return d1;
-  const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-  if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
-  const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-  if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); }
-  return null;
-}
-
-/******************************************************************
-* Alias / meta maps
-******************************************************************/
-async function buildAliasAndMetaMaps(){
-  aliasMap = {};
-  metaMap = {};
-  try{
-    const rows = await fetchSheetCSVRowsById(ASSESSORS_SPREADSHEET_ID, SHEETS.asesoresSheet);
-    for(let r=0; r<rows.length; r++){
-      const row = rows[r];
-      const rawUser = (row[COL.asesores.username] || '').trim();
-      const rawGroup = (row[COL.asesores.group] || '').trim();
-      const rawSupervisor = (row[COL.asesores.supervisor] || '').trim();
-      if(!rawUser) continue;
-      const keyNorm = normalizeForKey(rawUser);
-      const canonical = titleCase(keyNorm);
-      const group = rawGroup ? rawGroup : 'OTROS';
-      const supervisor = rawSupervisor ? rawSupervisor.toUpperCase() : 'OTROS';
-      metaMap[canonical] = { group, supervisor };
-      aliasMap[keyNorm] = canonical;
-      aliasMap[normalizeForKey(rawUser.replace(/\s+/g,' '))] = canonical;
-    }
-  } catch(err){
-    console.warn('No se pudo cargar Asesores sheet:', err.message);
-  }
-}
-
 function mapAdvisorToCanonical(raw){
-  const norm = normalizeForKey(raw);
-  if(!norm) return '';
-  if(aliasMap[norm]) return aliasMap[norm];
+  const normKey = normalizeForKey(raw);
+  if(!normKey) return '';
+  if(aliasMap[normKey]) return aliasMap[normKey];
   const candidates = Object.keys(metaMap);
-  const found = candidates.find(c => c.toUpperCase() === norm.toUpperCase());
+  const found = candidates.find(c => c.toUpperCase() === normKey.toUpperCase());
   if(found) return found;
-  const canonical = titleCase(norm);
+  const canonical = titleCase(normKey);
   if(!metaMap[canonical]) metaMap[canonical] = { group: 'OTROS', supervisor: 'OTROS' };
-  aliasMap[norm] = canonical;
+  aliasMap[normKey] = canonical;
   return canonical;
 }
 
-/******************************************************************
-* Conteos y puntajes (AGGREGATE con filtros solicitados y logs)
-******************************************************************/
+/* =========================
+   FILTRADO Y AGREGACIÓN
+   ========================= */
+
+/*
+  Reglas aplicadas:
+  - Tickets: status (col M) === 'CANALIZADO' AND stateI (col I) !== 'OPEN' && !== 'PENDING'
+  - Calls: label (col L) not empty and !== 'NO RESPONSE', status (col D) === 'completed', duration > 35s
+  - Chats: agentFlag (col M) === 'AGENT', duration exists and <= 300s
+*/
 function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
   const counts = {};
-  function ensure(name){ if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; }
-  function inRangeDate(d, from, to){
+  const ensure = name => { if(!counts[name]) counts[name] = { tickets:0, chats:0, calls:0 }; };
+  const inRangeDate = (d, from, to) => {
     if(!d) return false;
     const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     if(from && dd < from) return false;
     if(to && dd > to) return false;
     return true;
-  }
-  function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
-  function normVal(v){ return String(v || '').replace(/\u00A0/g,' ').trim().toUpperCase(); }
+  };
 
   // Tickets
   for(let r=1; r<ticketsRows.length; r++){
     const row = ticketsRows[r];
-    const rawAdvisor = cell(row, COL.tickets.advisor);
+    const rawAdvisor = safeCell(row, COL.tickets.advisor);
     const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
     if(!advisorCanonical) continue;
-    const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
+    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
     if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
-    if(selectedSupervisor){
-      if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
-    }
+    if(selectedSupervisor && String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
 
-    // Leer y normalizar valores
-    const rawStatus = cell(row, COL.tickets.status);
-    const status = normVal(rawStatus); // columna M
-    const rawStateI = cell(row, COL.tickets.stateI);
-    const stateI = normVal(rawStateI); // columna I
+    const status = norm(safeCell(row, COL.tickets.status)); // col M
+    const stateI = norm(safeCell(row, COL.tickets.stateI)); // col I
 
-    // Omitir si stateI explícitamente OPEN o PENDING
-    if(stateI === 'OPEN' || stateI === 'PENDING') {
-      console.warn('Ticket omitido por stateI (OPEN/PENDING):', {
-        rowIndex: r,
-        advisorRaw: rawAdvisor,
-        advisorCanonical,
-        status,
-        stateI,
-        rawRow: row.slice(0,20)
-      });
+    // Omitir si stateI es OPEN o PENDING
+    if(stateI === 'OPEN' || stateI === 'PENDING'){
+      if(DEBUG) console.warn('Ticket omitido por stateI OPEN/PENDING', { rowIndex: r, advisorRaw: rawAdvisor, status, stateI });
       continue;
     }
 
-    // Si status no es CANALIZADO, omitir
     if(status !== 'CANALIZADO') continue;
 
-    const rawDate = cell(row, COL.tickets.date);
+    const rawDate = safeCell(row, COL.tickets.date);
     const parsed = parseDateFlexible(rawDate);
     if((filterFrom || filterTo) && parsed){
       if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
@@ -433,67 +422,64 @@ function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filt
     counts[advisorCanonical].tickets += 1;
   }
 
-  // Chats (sin cambios en lógica actual)
+  // Chats
   for(let r=1; r<chatsRows.length; r++){
     const row = chatsRows[r];
-    const rawAdvisor = cell(row, COL.chats.advisor);
+    const rawAdvisor = safeCell(row, COL.chats.advisor);
     const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
     if(!advisorCanonical) continue;
-    const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
+    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
     if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
-    if(selectedSupervisor){
-      if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
-    }
-    const rawDuration = cell(row, COL.chats.duration);
+    if(selectedSupervisor && String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
+
+    const rawDuration = safeCell(row, COL.chats.duration);
     const seconds = durationToSeconds(rawDuration);
-    if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
-    if(seconds > 300) continue;
-    const rawAgent = cell(row, COL.chats.agentFlag);
-    const agentFlag = String(rawAgent || '').trim().toUpperCase();
+    if(seconds === 0 && String(rawDuration || '').trim() === '') continue; // sin duración
+    if(seconds > 300) continue; // mayor a 5 min
+    const agentFlag = norm(safeCell(row, COL.chats.agentFlag));
     if(agentFlag !== 'AGENT') continue;
-    const rawDate = cell(row, COL.chats.date);
+
+    const rawDate = safeCell(row, COL.chats.date);
     const parsed = parseDateFlexible(rawDate);
-    if(filterFrom || filterTo){
-      if(!parsed) continue;
+    if((filterFrom || filterTo) && parsed){
       if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
     }
+    if((filterFrom || filterTo) && !parsed) continue;
+
     ensure(advisorCanonical);
     counts[advisorCanonical].chats += 1;
   }
 
-  // Calls (filtro por etiqueta en L)
+  // Calls
   for(let r=1; r<callsRows.length; r++){
     const row = callsRows[r];
-    const rawAdvisor = cell(row, COL.calls.advisor);
+    const rawAdvisor = safeCell(row, COL.calls.advisor);
     const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
     if(!advisorCanonical) continue;
-    const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
+    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
     if(selectedGroup !== 'All' && meta.group !== selectedGroup) continue;
-    if(selectedSupervisor){
-      if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
-    }
+    if(selectedSupervisor && String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
 
-    const rawLabel = cell(row, COL.calls.labelL);
-    const label = normVal(rawLabel);
-    if(label === '' || label === 'NO RESPONSE') {
-      console.warn('Llamada omitida por etiqueta inválida:', { rowIndex: r, advisorRaw: rawAdvisor, label, rawRow: row.slice(0,20) });
+    const label = norm(safeCell(row, COL.calls.labelL));
+    if(label === '' || label === 'NO RESPONSE'){
+      if(DEBUG) console.warn('Llamada omitida por etiqueta inválida', { rowIndex: r, advisorRaw: rawAdvisor, label });
       continue;
     }
 
-    const rawStatus = cell(row, COL.calls.status);
-    const status = String(rawStatus || '').trim().toLowerCase();
+    const status = String(safeCell(row, COL.calls.status) || '').trim().toLowerCase();
     if(status !== 'completed') continue;
 
-    const rawDuration = cell(row, COL.calls.duration);
+    const rawDuration = safeCell(row, COL.calls.duration);
     const seconds = durationToSeconds(rawDuration);
     if(seconds <= 35) continue;
 
-    const rawDate = cell(row, COL.calls.date);
+    const rawDate = safeCell(row, COL.calls.date);
     const parsed = parseDateFlexible(rawDate);
-    if(filterFrom || filterTo){
-      if(!parsed) continue;
+    if((filterFrom || filterTo) && parsed){
       if(!inRangeDate(parsed, filterFrom, filterTo)) continue;
     }
+    if((filterFrom || filterTo) && !parsed) continue;
+
     ensure(advisorCanonical);
     counts[advisorCanonical].calls += 1;
   }
@@ -501,9 +487,7 @@ function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filt
   return counts;
 }
 
-/******************************************************************
-* Calculo de puntajes (sin cambios)
-******************************************************************/
+/* Puntajes: misma lógica que tenías, con redondeo */
 function calculateScoresFromCountsSum(countsObj){
   const counts = countsObj;
   const advisors = Object.keys(counts);
@@ -538,9 +522,131 @@ function calculateScoresFromCountsSum(countsObj){
   return arr;
 }
 
-/******************************************************************
-* Renderizado (sin cambios funcionales)
-******************************************************************/
+/* =========================
+   Export CSV coherente con filtros
+   ========================= */
+function rowsToCSV(rows){
+  return rows.map(r => r.map(cell => {
+    if(cell === null || cell === undefined) return '';
+    const s = String(cell).replace(/"/g,'""');
+    return `"${s}"`;
+  }).join(',')).join('\n');
+}
+
+function getPeriodRange(){
+  const fromVal = document.getElementById('dateFrom').value;
+  const toVal = document.getElementById('dateTo').value;
+  const fromDateOnly = fromVal ? new Date(fromVal) : null;
+  const toDateOnly = toVal ? new Date(toVal) : null;
+  return { fromDateOnly, toDateOnly };
+}
+
+function buildFilteredRawRows(){
+  const out = [];
+  out.push(['Tipo','Fecha','AsesorCanonical','AsesorRaw','Grupo','Supervisor','Estado/Agent','Duración','RawRow']);
+  const { fromDateOnly, toDateOnly } = getPeriodRange();
+  const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
+  const selectedSupervisor = selectedSupervisorRaw || '';
+
+  const tickets = cache.tickets || [];
+  for(let r=1; r<tickets.length; r++){
+    const row = tickets[r];
+    const rawAdvisor = safeCell(row, COL.tickets.advisor);
+    const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+    if(!advisorCanonical) continue;
+    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
+    if(activeGroup !== 'All' && meta.group !== activeGroup) continue;
+    if(selectedSupervisor && String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
+
+    const status = norm(safeCell(row, COL.tickets.status));
+    const stateI = norm(safeCell(row, COL.tickets.stateI));
+    if(stateI === 'OPEN' || stateI === 'PENDING'){
+      if(DEBUG) console.warn('Export: ticket omitido por stateI OPEN/PENDING', { rowIndex: r, advisorRaw: rawAdvisor, status, stateI });
+      continue;
+    }
+    if(status !== 'CANALIZADO') continue;
+
+    const rawDate = safeCell(row, COL.tickets.date);
+    const parsed = parseDateFlexible(rawDate);
+    if((fromDateOnly || toDateOnly) && parsed){
+      const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+      if(fromDateOnly && dd < fromDateOnly) continue;
+      if(toDateOnly && dd > toDateOnly) continue;
+    }
+    if((fromDateOnly || toDateOnly) && !parsed) continue;
+
+    out.push(['Ticket', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, status, '', row.join(' | ')]);
+  }
+
+  const chats = cache.chats || [];
+  for(let r=1; r<chats.length; r++){
+    const row = chats[r];
+    const rawAdvisor = safeCell(row, COL.chats.advisor);
+    const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+    if(!advisorCanonical) continue;
+    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
+    if(activeGroup !== 'All' && meta.group !== activeGroup) continue;
+    if(selectedSupervisor && String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
+
+    const rawDuration = safeCell(row, COL.chats.duration);
+    const seconds = durationToSeconds(rawDuration);
+    if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
+    if(seconds > 300) continue;
+    const agentFlag = String(safeCell(row, COL.chats.agentFlag) || '').trim().toUpperCase();
+    if(agentFlag !== 'AGENT') continue;
+
+    const rawDate = safeCell(row, COL.chats.date);
+    const parsed = parseDateFlexible(rawDate);
+    if((fromDateOnly || toDateOnly) && parsed){
+      const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+      if(fromDateOnly && dd < fromDateOnly) continue;
+      if(toDateOnly && dd > toDateOnly) continue;
+    }
+    if((fromDateOnly || toDateOnly) && !parsed) continue;
+
+    out.push(['Chat', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, agentFlag, rawDuration || '', row.join(' | ')]);
+  }
+
+  const calls = cache.calls || [];
+  for(let r=1; r<calls.length; r++){
+    const row = calls[r];
+    const rawAdvisor = safeCell(row, COL.calls.advisor);
+    const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
+    if(!advisorCanonical) continue;
+    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
+    if(activeGroup !== 'All' && meta.group !== activeGroup) continue;
+    if(selectedSupervisor && String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
+
+    const label = norm(safeCell(row, COL.calls.labelL));
+    if(label === '' || label === 'NO RESPONSE'){
+      if(DEBUG) console.warn('Export: llamada omitida por etiqueta inválida', { rowIndex: r, advisorRaw: rawAdvisor, label });
+      continue;
+    }
+
+    const status = String(safeCell(row, COL.calls.status) || '').trim().toLowerCase();
+    const rawDuration = safeCell(row, COL.calls.duration);
+    const seconds = durationToSeconds(rawDuration);
+    if(status !== 'completed') continue;
+    if(seconds <= 35) continue;
+
+    const rawDate = safeCell(row, COL.calls.date);
+    const parsed = parseDateFlexible(rawDate);
+    if((fromDateOnly || toDateOnly) && parsed){
+      const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+      if(fromDateOnly && dd < fromDateOnly) continue;
+      if(toDateOnly && dd > toDateOnly) continue;
+    }
+    if((fromDateOnly || toDateOnly) && !parsed) continue;
+
+    out.push(['Llamada', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, status, rawDuration || '', row.join(' | ')]);
+  }
+
+  return out;
+}
+
+/* =========================
+   UI: render y eventos
+   ========================= */
 function renderSkeletonRows(){
   const tbody = document.getElementById('leaderboardBody');
   tbody.innerHTML = '';
@@ -597,137 +703,7 @@ function renderLeaderboard(scores){
   }
 }
 
-/******************************************************************
-* Descargas: construir CSV raw filtrado (para cruces) - con validación y logs
-******************************************************************/
-function rowsToCSV(rows){
-  return rows.map(r => r.map(cell => {
-    if(cell === null || cell === undefined) return '';
-    const s = String(cell).replace(/"/g,'""');
-    return `"${s}"`;
-  }).join(',')).join('\n');
-}
-
-function getPeriodRange(){
-  const fromVal = document.getElementById('dateFrom').value;
-  const toVal = document.getElementById('dateTo').value;
-  const fromDateOnly = fromVal ? new Date(fromVal) : null;
-  const toDateOnly = toVal ? new Date(toVal) : null;
-  return { fromDateOnly, toDateOnly };
-}
-
-function buildFilteredRawRows(){
-  const out = [];
-  out.push(['Tipo','Fecha','AsesorCanonical','AsesorRaw','Grupo','Supervisor','Estado/Agent','Duración','RawRow']);
-  const { fromDateOnly, toDateOnly } = getPeriodRange();
-  const selectedSupervisorRaw = document.getElementById('filterSupervisor').value || '';
-  const selectedSupervisor = selectedSupervisorRaw || '';
-
-  function passesMeta(advisorCanonical){
-    const meta = metaMap[advisorCanonical] || { group: 'OTROS', supervisor: 'OTROS' };
-    if(activeGroup !== 'All' && meta.group !== activeGroup) return false;
-    if(selectedSupervisor){
-      if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) return false;
-    }
-    return true;
-  }
-
-  function normVal(v){ return String(v || '').replace(/\u00A0/g,' ').trim().toUpperCase(); }
-
-  const tickets = cache.tickets || [];
-  for(let r=1; r<tickets.length; r++){
-    const row = tickets[r];
-    const rawAdvisor = row[COL.tickets.advisor] || '';
-    const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-    if(!advisorCanonical) continue;
-    if(!passesMeta(advisorCanonical)) continue;
-
-    const status = normVal(row[COL.tickets.status]);
-    const stateI = normVal(row[COL.tickets.stateI]);
-
-    if(stateI === 'OPEN' || stateI === 'PENDING'){
-      console.warn('Export: ticket omitido por stateI OPEN/PENDING', { rowIndex: r, advisorRaw: rawAdvisor, status, stateI });
-      continue;
-    }
-    if(status !== 'CANALIZADO') continue;
-
-    const rawDate = row[COL.tickets.date];
-    const parsed = parseDateFlexible(rawDate);
-    if((fromDateOnly || toDateOnly) && parsed){
-      const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-      if(fromDateOnly && dd < fromDateOnly) continue;
-      if(toDateOnly && dd > toDateOnly) continue;
-    }
-    if((fromDateOnly || toDateOnly) && !parsed) continue;
-
-    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
-    out.push(['Ticket', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, status, '', row.join(' | ')]);
-  }
-
-  const chats = cache.chats || [];
-  for(let r=1; r<chats.length; r++){
-    const row = chats[r];
-    const rawAdvisor = row[COL.chats.advisor] || '';
-    const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-    if(!advisorCanonical) continue;
-    if(!passesMeta(advisorCanonical)) continue;
-
-    const rawDuration = row[COL.chats.duration];
-    const seconds = durationToSeconds(rawDuration);
-    if(seconds === 0 && String(rawDuration || '').trim() === '') continue;
-    if(seconds > 300) continue;
-    const agentFlag = String(row[COL.chats.agentFlag] || '').trim().toUpperCase();
-    if(agentFlag !== 'AGENT') continue;
-
-    const rawDate = row[COL.chats.date];
-    const parsed = parseDateFlexible(rawDate);
-    if((fromDateOnly || toDateOnly) && parsed){
-      const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-      if(fromDateOnly && dd < fromDateOnly) continue;
-      if(toDateOnly && dd > toDateOnly) continue;
-    }
-    if((fromDateOnly || toDateOnly) && !parsed) continue;
-
-    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
-    out.push(['Chat', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, agentFlag, rawDuration || '', row.join(' | ')]);
-  }
-
-  const calls = cache.calls || [];
-  for(let r=1; r<calls.length; r++){
-    const row = calls[r];
-    const rawAdvisor = row[COL.calls.advisor] || '';
-    const advisorCanonical = mapAdvisorToCanonical(rawAdvisor);
-    if(!advisorCanonical) continue;
-    if(!passesMeta(advisorCanonical)) continue;
-
-    const label = normVal(row[COL.calls.labelL]);
-    if(label === '' || label === 'NO RESPONSE'){
-      console.warn('Export: llamada omitida por etiqueta inválida', { rowIndex: r, advisorRaw: rawAdvisor, label });
-      continue;
-    }
-
-    const status = String(row[COL.calls.status] || '').trim().toLowerCase();
-    const rawDuration = row[COL.calls.duration];
-    const seconds = durationToSeconds(rawDuration);
-    if(status !== 'completed') continue;
-    if(seconds <= 35) continue;
-
-    const rawDate = row[COL.calls.date];
-    const parsed = parseDateFlexible(rawDate);
-    if((fromDateOnly || toDateOnly) && parsed){
-      const dd = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-      if(fromDateOnly && dd < fromDateOnly) continue;
-      if(toDateOnly && dd > toDateOnly) continue;
-    }
-    if((fromDateOnly || toDateOnly) && !parsed) continue;
-
-    const meta = metaMap[advisorCanonical] || { group:'OTROS', supervisor:'OTROS' };
-    out.push(['Llamada', parsed ? parsed.toISOString().slice(0,10) : (rawDate||''), advisorCanonical, rawAdvisor, meta.group, meta.supervisor, status, rawDuration || '', row.join(' | ')]);
-  }
-
-  return out;
-}
-
+/* Download helper */
 function downloadCSV(text, filename){
   const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -740,21 +716,17 @@ function downloadCSV(text, filename){
   URL.revokeObjectURL(url);
 }
 
-/******************************************************************
-* Modal y descargas protegidas (mínimo)
-******************************************************************/
+/* Modal handlers */
 function openPasswordModal(){
   document.getElementById('modalBackdrop').style.display = 'flex';
   document.getElementById('downloadPassword').value = '';
   document.getElementById('modalMsg').textContent = '';
   document.getElementById('downloadPassword').focus();
 }
-
 function closePasswordModal(){
   document.getElementById('modalBackdrop').style.display = 'none';
   pendingDownload = null;
 }
-
 async function confirmDownloadAction(){
   const val = (document.getElementById('downloadPassword').value || '').trim();
   if(!val){ document.getElementById('modalMsg').textContent = 'Introduce la clave.'; return; }
@@ -772,16 +744,10 @@ async function confirmDownloadAction(){
   }
 }
 
-/******************************************************************
-* Inicialización y eventos (mínimo funcional)
-******************************************************************/
+/* Event wiring */
 document.getElementById('modalClose').addEventListener('click', closePasswordModal);
 document.getElementById('confirmDownload').addEventListener('click', confirmDownloadAction);
-
-document.getElementById('downloadFiltered').addEventListener('click', () => {
-  pendingDownload = { filename: 'datos_filtrados.csv' };
-  openPasswordModal();
-});
+document.getElementById('downloadFiltered').addEventListener('click', () => { pendingDownload = { filename: 'datos_filtrados.csv' }; openPasswordModal(); });
 
 document.getElementById('applyFilters').addEventListener('click', async () => {
   renderSkeletonRows();
@@ -805,7 +771,7 @@ document.getElementById('applyFilters').addEventListener('click', async () => {
   }
 });
 
-/* Pestañas de grupo */
+/* Tabs */
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -815,7 +781,14 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
-/* Simulación: cargar datos de ejemplo si fetch falla (para que la UI funcione) */
+/* Export buttons (aplican mismos filtros) */
+document.getElementById('exportTickets').addEventListener('click', () => { pendingDownload = { filename: 'tickets_filtrados.csv' }; openPasswordModal(); });
+document.getElementById('exportChats').addEventListener('click', () => { pendingDownload = { filename: 'chats_filtrados.csv' }; openPasswordModal(); });
+document.getElementById('exportCalls').addEventListener('click', () => { pendingDownload = { filename: 'llamadas_filtradas.csv' }; openPasswordModal(); });
+
+/* =========================
+   Inicialización: carga de datos
+   ========================= */
 async function loadAllData(){
   renderSkeletonRows();
   try{
@@ -830,7 +803,7 @@ async function loadAllData(){
       cache.chats = cRows;
       cache.calls = callRows;
     } catch(err){
-      console.warn('No se pudieron cargar hojas de datos, usando cache vacío.', err.message);
+      if(DEBUG) console.warn('No se pudieron cargar hojas de datos, usando cache vacío.', err.message);
     }
     document.getElementById('lastSync').textContent = new Date().toLocaleString();
     document.getElementById('applyFilters').click();
@@ -838,6 +811,11 @@ async function loadAllData(){
     console.error(err);
   }
 }
+
+/* Auto-refresh */
+let autoRefreshTimer = setInterval(() => {
+  loadAllData();
+}, AUTO_REFRESH_MS);
 
 loadAllData();
 </script>
