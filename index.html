@@ -60,7 +60,7 @@ tbody tr:hover{background:linear-gradient(90deg, rgba(242,143,23,0.03), rgba(242
 .loading-text{font-weight:700;color:var(--muted)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:10000}
 .modal{background:#fff;border-radius:12px;padding:18px;max-width:760px;width:94%;max-height:86vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
-.modal h3{Margin:0 0 8px 0}
+.modal h3{margin:0 0 8px 0}
 .modal .close{float:right;background:transparent;border:none;font-weight:800;font-size:18px;cursor:pointer}
 .modal .row{display:flex;gap:8px;align-items:center;margin-top:8px}
 .modal input[type="password"]{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border)}
@@ -373,7 +373,7 @@ function mapAdvisorToCanonical(raw){
 }
 
 /******************************************************************
-* Conteos y puntajes (AGGREGATE con filtros solicitados)
+* Conteos y puntajes (AGGREGATE con filtros solicitados y logs)
 ******************************************************************/
 function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filterTo, selectedGroup, selectedSupervisor){
   const counts = {};
@@ -386,6 +386,7 @@ function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filt
     return true;
   }
   function cell(row, idx){ return (row && idx>=0 && idx < row.length) ? row[idx] : ''; }
+  function normVal(v){ return String(v || '').replace(/\u00A0/g,' ').trim().toUpperCase(); }
 
   // Tickets
   for(let r=1; r<ticketsRows.length; r++){
@@ -399,15 +400,26 @@ function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filt
       if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
     }
 
-    // Estado principal (col M) y estado extra en columna I
+    // Leer y normalizar valores
     const rawStatus = cell(row, COL.tickets.status);
-    const status = String(rawStatus || '').trim().toUpperCase();
-
+    const status = normVal(rawStatus); // columna M
     const rawStateI = cell(row, COL.tickets.stateI);
-    const stateI = String(rawStateI || '').trim().toUpperCase();
-    // Omitir si en columna I está Open o Pending
-    if(stateI === 'OPEN' || stateI === 'PENDING') continue;
+    const stateI = normVal(rawStateI); // columna I
 
+    // Omitir si stateI explícitamente OPEN o PENDING
+    if(stateI === 'OPEN' || stateI === 'PENDING') {
+      console.warn('Ticket omitido por stateI (OPEN/PENDING):', {
+        rowIndex: r,
+        advisorRaw: rawAdvisor,
+        advisorCanonical,
+        status,
+        stateI,
+        rawRow: row.slice(0,20)
+      });
+      continue;
+    }
+
+    // Si status no es CANALIZADO, omitir
     if(status !== 'CANALIZADO') continue;
 
     const rawDate = cell(row, COL.tickets.date);
@@ -449,7 +461,7 @@ function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filt
     counts[advisorCanonical].chats += 1;
   }
 
-  // Calls (añadimos filtro por etiqueta en columna L)
+  // Calls (filtro por etiqueta en L)
   for(let r=1; r<callsRows.length; r++){
     const row = callsRows[r];
     const rawAdvisor = cell(row, COL.calls.advisor);
@@ -461,10 +473,12 @@ function aggregateCountsOnly(ticketsRows, chatsRows, callsRows, filterFrom, filt
       if(String(meta.supervisor || '').toUpperCase() !== String(selectedSupervisor || '').toUpperCase()) continue;
     }
 
-    // Etiqueta en columna L: omitir si vacía o "No response"
     const rawLabel = cell(row, COL.calls.labelL);
-    const label = String(rawLabel || '').trim().toUpperCase();
-    if(label === '' || label === 'NO RESPONSE') continue;
+    const label = normVal(rawLabel);
+    if(label === '' || label === 'NO RESPONSE') {
+      console.warn('Llamada omitida por etiqueta inválida:', { rowIndex: r, advisorRaw: rawAdvisor, label, rawRow: row.slice(0,20) });
+      continue;
+    }
 
     const rawStatus = cell(row, COL.calls.status);
     const status = String(rawStatus || '').trim().toLowerCase();
@@ -584,7 +598,7 @@ function renderLeaderboard(scores){
 }
 
 /******************************************************************
-* Descargas: construir CSV raw filtrado (para cruces) - con filtros
+* Descargas: construir CSV raw filtrado (para cruces) - con validación y logs
 ******************************************************************/
 function rowsToCSV(rows){
   return rows.map(r => r.map(cell => {
@@ -618,6 +632,8 @@ function buildFilteredRawRows(){
     return true;
   }
 
+  function normVal(v){ return String(v || '').replace(/\u00A0/g,' ').trim().toUpperCase(); }
+
   const tickets = cache.tickets || [];
   for(let r=1; r<tickets.length; r++){
     const row = tickets[r];
@@ -626,10 +642,13 @@ function buildFilteredRawRows(){
     if(!advisorCanonical) continue;
     if(!passesMeta(advisorCanonical)) continue;
 
-    const status = String(row[COL.tickets.status] || '').trim().toUpperCase();
-    const stateI = String(row[COL.tickets.stateI] || '').trim().toUpperCase();
-    // Omitir Open / Pending en columna I
-    if(stateI === 'OPEN' || stateI === 'PENDING') continue;
+    const status = normVal(row[COL.tickets.status]);
+    const stateI = normVal(row[COL.tickets.stateI]);
+
+    if(stateI === 'OPEN' || stateI === 'PENDING'){
+      console.warn('Export: ticket omitido por stateI OPEN/PENDING', { rowIndex: r, advisorRaw: rawAdvisor, status, stateI });
+      continue;
+    }
     if(status !== 'CANALIZADO') continue;
 
     const rawDate = row[COL.tickets.date];
@@ -681,9 +700,11 @@ function buildFilteredRawRows(){
     if(!advisorCanonical) continue;
     if(!passesMeta(advisorCanonical)) continue;
 
-    // Etiqueta en L: omitir si vacía o "No response"
-    const label = String(row[COL.calls.labelL] || '').trim().toUpperCase();
-    if(label === '' || label === 'NO RESPONSE') continue;
+    const label = normVal(row[COL.calls.labelL]);
+    if(label === '' || label === 'NO RESPONSE'){
+      console.warn('Export: llamada omitida por etiqueta inválida', { rowIndex: r, advisorRaw: rawAdvisor, label });
+      continue;
+    }
 
     const status = String(row[COL.calls.status] || '').trim().toLowerCase();
     const rawDuration = row[COL.calls.duration];
@@ -738,7 +759,6 @@ async function confirmDownloadAction(){
   const val = (document.getElementById('downloadPassword').value || '').trim();
   if(!val){ document.getElementById('modalMsg').textContent = 'Introduce la clave.'; return; }
   if(val !== SECRET_CODE){ document.getElementById('modalMsg').textContent = 'Clave incorrecta.'; return; }
-  // proceder con la descarga pendiente
   if(!pendingDownload){ document.getElementById('modalMsg').textContent = 'No hay descarga pendiente.'; return; }
   try{
     const rows = buildFilteredRawRows();
@@ -764,7 +784,6 @@ document.getElementById('downloadFiltered').addEventListener('click', () => {
 });
 
 document.getElementById('applyFilters').addEventListener('click', async () => {
-  // ejemplo simple: recalc con cache actual
   renderSkeletonRows();
   try{
     const fromVal = document.getElementById('dateFrom').value;
@@ -775,7 +794,6 @@ document.getElementById('applyFilters').addEventListener('click', async () => {
     const counts = aggregateCountsOnly(cache.tickets || [], cache.chats || [], cache.calls || [], from, to, activeGroup, supervisor);
     const scores = calculateScoresFromCountsSum(counts);
     renderLeaderboard(scores);
-    // actualizar stats
     document.getElementById('statAdvisors').textContent = Object.keys(counts).length;
     let totalTickets = 0, totalCalls = 0, totalChats = 0;
     Object.values(counts).forEach(c => { totalTickets += c.tickets; totalCalls += c.calls; totalChats += c.chats; });
@@ -802,7 +820,6 @@ async function loadAllData(){
   renderSkeletonRows();
   try{
     await buildAliasAndMetaMaps();
-    // intentar cargar hojas; si falla, dejar cache vacío
     try{
       const [tRows, cRows, callRows] = await Promise.all([
         fetchSheetCSVRowsById(SPREADSHEET_ID, SHEETS.tickets),
