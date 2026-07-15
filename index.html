@@ -659,7 +659,7 @@
         if(status !== 'completed') continue;
         const rawDuration = row[COL.calls.duration];
         const seconds = durationToSeconds(rawDuration);
-        if(seconds <= 35) continue;
+        if(seconds < 60) continue;
         const rawDate = row[COL.calls.date];
         const parsed = parseDateFlexible(rawDate);
         if((fromDateOnly || toDateOnly) && parsed){
