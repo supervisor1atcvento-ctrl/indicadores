@@ -25,7 +25,6 @@
             --radius: 12px;
             --shadow-sm: 0 4px 20px rgba(35, 31, 32, 0.08);
         }
-
         /* ----------------- Reset y Tipografía ----------------- */
         * { box-sizing: border-box; }
         html, body { height: 100%; }
@@ -38,7 +37,6 @@
             line-height: 1.4;
             font-size: 14px;
         }
-
         .container {
             max-width: 1320px;
             margin: 24px auto;
@@ -47,7 +45,6 @@
             flex-direction: column;
             gap: 20px;
         }
-
         /* ----------------- Header ----------------- */
         header {
             display: flex; align-items: center; justify-content: space-between;
@@ -63,7 +60,6 @@
         }
         h1 { font-size: 24px; margin: 0; font-weight: 700; color: var(--vento-primary); letter-spacing: -0.5px; }
         .subtitle { font-size: 14px; color: var(--muted); font-weight: 600; margin-top: 2px; }
-
         /* ----------------- Top Cards ----------------- */
         .top-bar { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         .top-card {
@@ -81,7 +77,6 @@
         .stat { padding: 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); text-align: center; }
         .stat .label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
         .stat .value { font-weight: 700; font-size: 20px; color: var(--vento-primary); margin-top: 4px; }
-
         /* ----------------- Controles y Filtros ----------------- */
         .controls-wrapper {
             background: var(--card); padding: 16px 20px; border-radius: var(--radius);
@@ -104,7 +99,6 @@
         }
         .rules-bar ul { margin: 6px 0 0 20px; padding: 0; }
         .rules-bar li { margin-bottom: 4px; }
-
         .actions-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 14px; }
         button { font-family: "Segoe UI", sans-serif; cursor: pointer; transition: all 0.2s; }
         button.primary { background: var(--vento-accent); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 10px rgba(242, 143, 23, 0.3); }
@@ -117,7 +111,6 @@
         .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
         .tab { background: var(--bg); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--muted); font-size: 14px; }
         .tab.active { background: var(--vento-primary); border-color: var(--vento-primary); color: #FFF; }
-
         /* ----------------- Tabla Leaderboard ----------------- */
         .card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .table-wrap { overflow-x: auto; margin-top: 10px; }
@@ -136,15 +129,9 @@
         .metric-sub { font-size: 11px; font-weight: 600; color: var(--muted); }
         
         .score { font-size: 18px; padding: 6px 12px; border-radius: 8px; background: #FFF4E5; color: var(--vento-accent); font-weight: 700; display: inline-block; border: 1px solid rgba(242, 143, 23, 0.2); }
-        .status-pill { display: inline-block; padding: 4px 10px; border-radius: 12px; font-weight: 700; font-size: 12px; color: #fff; margin-top: 6px;}
-        .status-cumplido { background: var(--success); }
-        .status-cerca { background: var(--warning); color: #FFF; }
-        .status-lejos { background: var(--danger); }
-
         .top-highlight-1 td { background: rgba(255, 213, 74, 0.1); }
         .top-highlight-2 td { background: rgba(230, 238, 248, 0.4); }
         .top-highlight-3 td { background: rgba(255, 216, 181, 0.2); }
-
         /* ----------------- Modal Gráficas ----------------- */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
@@ -161,14 +148,11 @@
         }
         .close-modal:hover { color: var(--vento-accent); }
         .chart-container { position: relative; height: 350px; width: 100%; margin-top: 20px; }
-
         footer { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; padding-bottom: 20px; font-weight: 600; }
-
         @media(max-width: 1000px) { .top-bar { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-
 <div class="container">
     <header>
         <div class="brand">
@@ -183,7 +167,6 @@
             <div id="lastSync" style="font-weight: 700; color: var(--vento-primary); font-size: 15px; margin-top: 4px;">--:--</div>
         </div>
     </header>
-
     <!-- TOP BAR -->
     <div class="top-bar">
         <div class="top-card">
@@ -214,7 +197,6 @@
             </div>
         </div>
     </div>
-
     <!-- CONTROLES -->
     <div class="controls-wrapper">
         <div class="filters">
@@ -246,7 +228,7 @@
         <div class="rules-bar">
             <strong>📌 Reglas de Negocio (Filtros de validación para metas):</strong>
             <ul>
-                <li><strong>Tickets:</strong> Únicamente se contabilizan los que cuentan con estatus <em>CANALIZADO</em>.</li>
+                <li><strong>Tickets:</strong> Se contabilizan los que cuentan con estatus <em>CANALIZADO</em>, descartando aquellos en estatus <em>Open, Pending o POR ASIGNAR CESVE</em>.</li>
                 <li><strong>Llamadas:</strong> Se cuentan con estatus <em>COMPLETED</em> y una duración <em>mayor o igual a 1 minuto (60 segundos)</em>.</li>
                 <li><strong>Chats:</strong> Se cuentan los atendidos por <em>AGENT</em> y con una duración <em>menor o igual a 5 minutos (300 segundos)</em>.</li>
             </ul>
@@ -266,7 +248,6 @@
             </select>
         </div>
     </div>
-
     <div class="tabs" role="tablist">
         <div class="tab active" data-group="All">Visualizar Todos</div>
         <div class="tab" data-group="Vento">Vento</div>
@@ -275,7 +256,6 @@
         <div class="tab" data-group="Nuevo ingreso">Nuevo Ingreso</div>
         <div class="tab" data-group="OTROS">Otros</div>
     </div>
-
     <!-- MAIN LEADERBOARD -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -288,7 +268,7 @@
                     <tr>
                         <th style="width: 50px;">Pos</th>
                         <th style="min-width: 200px;">Asesor / Grupo</th>
-                        <th>Tickets (Canalizados)</th>
+                        <th>Tickets (Válidos)</th>
                         <th>Llamadas (Completadas)</th>
                         <th>Chats (Atendidos)</th>
                         <th style="text-align: right;">Puntaje General</th>
@@ -300,13 +280,11 @@
         
         <div style="margin-top: 16px; color: var(--muted); font-size: 12px; background: var(--bg); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border);">
             <strong style="color: var(--vento-accent);">💡 Tip:</strong> Haz clic en el nombre de cualquier asesor para visualizar la gráfica de constancia diaria.<br>
-            <div style="margin-top: 4px;"><strong>Indicadores de color:</strong> <span style="color: var(--success); font-weight: bold;">■ Verde</span> (En meta), <span style="color: var(--warning); font-weight: bold;">■ Amarillo</span> (Cerca, &ge;80%), <span style="color: var(--danger); font-weight: bold;">■ Rojo</span> (Rezago, &lt;80%).</div>
+            <div style="margin-top: 4px;"><strong>Indicadores de color en barras:</strong> <span style="color: var(--success); font-weight: bold;">■ Verde</span> (En meta), <span style="color: var(--warning); font-weight: bold;">■ Amarillo</span> (Cerca, &ge;80%), <span style="color: var(--danger); font-weight: bold;">■ Rojo</span> (Rezago, &lt;80%).</div>
         </div>
     </div>
-
     <footer>Dashboard Privado · Actualización automática programada (15 min)</footer>
 </div>
-
 <!-- Modal de Gráfica -->
 <div id="chartModal" class="modal">
     <div class="modal-content">
@@ -318,7 +296,6 @@
         </div>
     </div>
 </div>
-
 <!-- Loader -->
 <div id="loadingOverlay" style="position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(255,255,255,0.85); z-index: 9999;">
     <div style="text-align: center;">
@@ -327,27 +304,24 @@
     </div>
 </div>
 <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-
 <script>
 /* ----------------- Config y constantes ----------------- */
 const SPREADSHEET_ID = '1JBre4cLAbYiOJuYye_FGcsk5U_BIStDoAiCbV-B8WoA';
 const ASSESSORS_SPREADSHEET_ID = '1GBcoYjw-mziCA30F2CgqGM9kKWjJjeSiTGfHN6XM8rE';
 const SHEETS = { tickets: 'Tickets_BD', chats: 'Chats_BD', calls: 'Llamadas_BD', asesoresSheet: 'Asesores' };
 const AUTO_REFRESH_MS = 15 * 60 * 1000;
-
 function letterToIndex(letter){ return letter.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); }
 const COL = {
-    tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), status: letterToIndex('M') },
+    // ACTUALIZACIÓN DE COLUMNA I: Se agregó la definición para statusI correspondiente a la columna I
+    tickets: { advisor: letterToIndex('E'), date: letterToIndex('H'), statusI: letterToIndex('I'), status: letterToIndex('M') },
     chats: { advisor: letterToIndex('B'), duration: letterToIndex('C'), date: letterToIndex('I'), agentFlag: letterToIndex('M') },
     calls: { advisor: letterToIndex('B'), date: letterToIndex('C'), status: letterToIndex('D'), duration: letterToIndex('K') },
     asesores: { supervisor: letterToIndex('C'), username: letterToIndex('D'), group: letterToIndex('E') }
 };
-
 /* ----------------- Estado Global ----------------- */
 let aliasMap = {}; let metaMap = {}; let cache = { tickets:[], chats:[], calls:[] };
 let activeGroup = 'All'; let currentChartInstance = null;
 let currentFilteredData = []; 
-
 /* ----------------- Utilidades de Parseo ----------------- */
 function parseCSV(text){
     const rows=[]; let cur='', row=[], inQuotes=false;
@@ -361,12 +335,10 @@ function parseCSV(text){
     if(cur!=='' || row.length){ row.push(cur); rows.push(row); }
     return rows;
 }
-
 function fetchSheetCSVRowsById(spreadsheetId, sheetName){
     const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
     return fetch(url).then(res => { if(!res.ok) throw new Error('Error al leer hoja (' + res.status + ')'); return res.text(); }).then(parseCSV);
 }
-
 function normalizeForKey(s){ 
     if(!s) return ''; 
     let t=String(s).replace(/\u00A0/g,' ').replace(/\t/g,' ').trim(); t=t.replace(/[\\\.,]/g,''); t=t.toUpperCase();
@@ -375,9 +347,7 @@ function normalizeForKey(s){
     if(t.includes(',')){ const parts=t.split(','); if(parts.length>=2){ t=(parts[1]+' '+parts[0]).trim(); } }
     t=t.replace(/\s+/g,' ').trim(); return t;
 }
-
 function titleCase(s){ return !s ? s : s.toLowerCase().split(' ').map(w=>w?(w[0].toUpperCase()+w.slice(1)):'').join(' '); }
-
 function durationToSeconds(s){ 
     if(!s) return 0; const str=String(s).trim().toLowerCase(); if(!str) return 0; let total=0;
     const mD=str.match(/(\d+)\s*d/); if(mD) total+=parseInt(mD[1],10)*86400;
@@ -387,14 +357,12 @@ function durationToSeconds(s){
     if(total===0){ const onlyNum=str.match(/^(\d+)$/); if(onlyNum) total=parseInt(onlyNum[1],10); }
     return total;
 }
-
 function parseDateFlexible(v){ 
     if(!v) return null; const s=String(v).trim(); if(s===''||s==='0'||s==='-'||s.toLowerCase()==='null') return null;
     const d1=new Date(s); if(!isNaN(d1.getTime())) return d1;
     const m=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/); if(m){ const day=+m[1], mon=+m[2]-1, yr=+m[3]; return new Date(yr<100?2000+yr:yr,mon,day); }
     const m2=s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/); if(m2){ return new Date(+m2[1], +m2[2]-1, +m2[3]); } return null;
 }
-
 /* ----------------- Lógica de Fechas Automatizadas ----------------- */
 document.getElementById('periodSelector').addEventListener('change', function() {
     const period = this.value;
@@ -417,7 +385,6 @@ document.getElementById('periodSelector').addEventListener('change', function() 
         document.getElementById('dateTo').value = formatDateLocal(lastDay);
     }
 });
-
 /* ----------------- Días Laborales y Progreso Esperado ----------------- */
 function getWorkingDaysForMonth(modality, year, month) {
     const total = new Date(year, month + 1, 0).getDate();
@@ -430,14 +397,12 @@ function getWorkingDaysForMonth(modality, year, month) {
     }
     return result;
 }
-
 function expectedUntilToday(monthlyMeta, workingDaysArray, today = new Date()) {
     const total = workingDaysArray.length;
     const passed = workingDaysArray.filter(d => d <= today).length;
     if (total === 0) return 0;
     return (monthlyMeta / total) * passed;
 }
-
 function getBarColor(real, expected) {
     if (expected <= 0) return 'var(--success)';
     const ratio = real / expected;
@@ -445,7 +410,6 @@ function getBarColor(real, expected) {
     if (ratio >= 0.8) return 'var(--warning)';
     return 'var(--danger)';
 }
-
 /* ----------------- Mapeo de Usuarios ----------------- */
 async function buildAliasAndMetaMaps(){
     aliasMap={}; metaMap={};
@@ -462,7 +426,7 @@ async function buildAliasAndMetaMaps(){
             const keyNorm=normalizeForKey(rawUser);
             const canonical=titleCase(keyNorm);
             const group=rawGroup?rawGroup:'OTROS';
-            const supervisor=rawSupervisor?rawSupervisor.toUpperCase():'OTROS';
+            const supervisor=rawSupervisor?rawSupervisor.toUpperCase:'OTROS';
             const modality = group && group.toLowerCase().includes('home') ? 'Home Office' : 'Presencial';
             
             metaMap[canonical]={group,supervisor,modality};
@@ -480,7 +444,6 @@ async function buildAliasAndMetaMaps(){
         supSelect.value = currentVal;
     }catch(err){ console.warn('Error Asesores:', err.message); }
 }
-
 function mapAdvisorToCanonical(raw){
     const norm=normalizeForKey(raw); if(!norm) return '';
     if(aliasMap[norm]) return aliasMap[norm];
@@ -490,7 +453,6 @@ function mapAdvisorToCanonical(raw){
     if(!metaMap[canonical]) metaMap[canonical]={group:'OTROS',supervisor:'OTROS',modality:'Presencial'};
     aliasMap[norm]=canonical; return canonical;
 }
-
 /* ----------------- Renderizado del Leaderboard ----------------- */
 function buildLeaderboardRows(scoresArr) {
     const tbody = document.getElementById('leaderboardBody');
@@ -503,7 +465,6 @@ function buildLeaderboardRows(scoresArr) {
     const presCalls = Number(document.getElementById('goal_pres_calls').textContent);
     const hoTickets = Number(document.getElementById('goal_ho_tickets').textContent);
     const hoChats = Number(document.getElementById('goal_ho_chats').textContent);
-
     scoresArr.forEach((s, idx) => {
         const meta = {
             tickets: s.modality === 'Home Office' ? hoTickets : presTickets,
@@ -531,15 +492,10 @@ function buildLeaderboardRows(scoresArr) {
         const pctRealOverall = sumMeta > 0 ? (sumReal / sumMeta) * 100 : 0;
         const pctExpOverall = sumMeta > 0 ? (sumExp / sumMeta) * 100 : 0;
         
-        let statusClass = 'status-lejos';
-        if (pctRealOverall >= pctExpOverall) statusClass = 'status-cumplido';
-        else if (pctRealOverall >= pctExpOverall * 0.8) statusClass = 'status-cerca';
-
         const tr = document.createElement('tr');
         if(idx === 0) tr.classList.add('top-highlight-1');
         else if(idx === 1) tr.classList.add('top-highlight-2');
         else if(idx === 2) tr.classList.add('top-highlight-3');
-
         tr.innerHTML = `
             <td style="font-weight: 700; color: var(--muted);">${idx + 1}</td>
             <td>
@@ -563,16 +519,13 @@ function buildLeaderboardRows(scoresArr) {
             </td>
             <td style="text-align: right;">
                 <div class="score">${s.total.toFixed(0)} Pts</div>
-                <br><span class="status-pill ${statusClass}">${Math.round(pctRealOverall)}% Meta</span>
             </td>
         `;
         tbody.appendChild(tr);
-
         const link = tr.querySelector('.advisor-name-link');
         if(link) link.addEventListener('click', () => openChartModal(s.name));
     });
 }
-
 /* ----------------- Lógica Gráfica Individual ----------------- */
 function getDailyChartData(advisorName, start, end) {
     const labels=[]; const dates=[];
@@ -589,13 +542,19 @@ function getDailyChartData(advisorName, start, end) {
     
     cache.tickets.forEach(row => {
         if(mapAdvisorToCanonical(row[COL.tickets.advisor]) !== advisorName) return;
-        if(String(row[COL.tickets.status]||'').toUpperCase()!=='CANALIZADO') return;
+        
+        // ACTUALIZACIÓN LÓGICA DE TICKETS: Comprobamos el estatus de la columna I y la columna M
+        const statusI = String(row[COL.tickets.statusI] || '').toUpperCase();
+        const statusM = String(row[COL.tickets.status] || '').toUpperCase();
+        const invalidStatuses = ["OPEN", "PENDING", "POR ASIGNAR CESVE"];
+        
+        if (statusM !== 'CANALIZADO' || invalidStatuses.includes(statusI)) return;
+        
         const parsed=parseDateFlexible(row[COL.tickets.date]);
         if(parsed && parsed>=start && parsed<=end){
             addCount(parsed.getFullYear()+'-'+String(parsed.getMonth()+1).padStart(2,'0')+'-'+String(parsed.getDate()).padStart(2,'0'), 't');
         }
     });
-
     cache.chats.forEach(row => {
         if(mapAdvisorToCanonical(row[COL.chats.advisor]) !== advisorName) return;
         if(String(row[COL.chats.agentFlag]||'').toUpperCase()!=='AGENT') return;
@@ -605,11 +564,10 @@ function getDailyChartData(advisorName, start, end) {
             addCount(parsed.getFullYear()+'-'+String(parsed.getMonth()+1).padStart(2,'0')+'-'+String(parsed.getDate()).padStart(2,'0'), 'ch');
         }
     });
-
     cache.calls.forEach(row => {
         if(mapAdvisorToCanonical(row[COL.calls.advisor]) !== advisorName) return;
         if(String(row[COL.calls.status]||'').toLowerCase()!=='completed') return;
-        if(durationToSeconds(row[COL.calls.duration])<60) return; // <--- CORRECCIÓN DE REGLA AQUÍ
+        if(durationToSeconds(row[COL.calls.duration])<60) return; 
         const parsed=parseDateFlexible(row[COL.calls.date]);
         if(parsed && parsed>=start && parsed<=end){
             addCount(parsed.getFullYear()+'-'+String(parsed.getMonth()+1).padStart(2,'0')+'-'+String(parsed.getDate()).padStart(2,'0'), 'c');
@@ -619,7 +577,6 @@ function getDailyChartData(advisorName, start, end) {
     const seriesData = dates.map(d => { const v = dailyCounts[d] ? dailyCounts[d] : {t:0,c:0,ch:0}; return v.t + v.c + v.ch; });
     return { labels, series: seriesData };
 }
-
 function openChartModal(advisorName) {
     const modal = document.getElementById('chartModal');
     document.getElementById('chartTitle').textContent = `Rendimiento de ${advisorName}`;
@@ -647,9 +604,7 @@ function openChartModal(advisorName) {
         }
     });
 }
-
 document.getElementById('closeModal').addEventListener('click', () => { document.getElementById('chartModal').style.display = 'none'; });
-
 /* ----------------- Descargas de Archivos ----------------- */
 function downloadCSV(csvContent, fileName) {
     const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -657,7 +612,6 @@ function downloadCSV(csvContent, fileName) {
     link.setAttribute("href", url); link.setAttribute("download", fileName);
     link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
-
 function exportFilteredTable() {
     if(!currentFilteredData.length) { alert("No hay registros en la vista actual para descargar."); return; }
     let csv = "Posicion,Asesor,Grupo,Supervisor,Modalidad,Tickets,Llamadas,Chats,Puntaje\n";
@@ -666,25 +620,21 @@ function exportFilteredTable() {
     });
     downloadCSV(csv, `Reporte_Leaderboard_${new Date().toISOString().split('T')[0]}.csv`);
 }
-
 // NUEVA FUNCIÓN: Descarga de archivo Excel real (.xlsx) con las 4 pestañas y datos íntegros
 function exportExcelMultiTabs() {
     if (typeof XLSX === 'undefined') {
         alert("La librería de Excel no ha terminado de cargar. Por favor, intenta de nuevo en unos segundos.");
         return;
     }
-
     let from = null, to = null;
     if(document.getElementById('dateFrom').value) from = new Date(document.getElementById('dateFrom').value + 'T00:00:00');
     if(document.getElementById('dateTo').value) to = new Date(document.getElementById('dateTo').value + 'T23:59:59');
     const selectedSupervisor = document.getElementById('filterSupervisor').value;
-
     // 1. Matriz de datos para la pestaña "Leaderboard"
     const wsLeaderboardData = [["Posicion", "Asesor", "Grupo", "Supervisor", "Modalidad", "Tickets Válidos", "Llamadas Válidas", "Chats Válidos", "Puntaje"]];
     currentFilteredData.forEach((s, idx) => {
         wsLeaderboardData.push([idx + 1, s.name, s.group, s.supervisor, s.modality, s.tickets, s.calls, s.chats, s.total.toFixed(0)]);
     });
-
     // 2. Matriz de datos para la pestaña "Tickets Válidos"
     const wsTicketsData = [];
     if(cache.tickets.length > 0) wsTicketsData.push(cache.tickets[0]); // Conservar las cabeceras originales
@@ -695,13 +645,17 @@ function exportExcelMultiTabs() {
         if(activeGroup !== 'All' && meta.group !== activeGroup) return;
         if(selectedSupervisor && meta.supervisor.toUpperCase() !== selectedSupervisor.toUpperCase()) return;
         
-        if(String(row[COL.tickets.status]||'').toUpperCase() === 'CANALIZADO') {
+        // ACTUALIZACIÓN LÓGICA DE TICKETS: Comprobamos columna M y columna I
+        const statusI = String(row[COL.tickets.statusI] || '').toUpperCase();
+        const statusM = String(row[COL.tickets.status] || '').toUpperCase();
+        const invalidStatuses = ["OPEN", "PENDING", "POR ASIGNAR CESVE"];
+
+        if(statusM === 'CANALIZADO' && !invalidStatuses.includes(statusI)) {
             const d = parseDateFlexible(row[COL.tickets.date]);
             if(from && d < from) return; if(to && d > to) return;
             wsTicketsData.push(row); // Insertar toda la fila original
         }
     });
-
     // 3. Matriz de datos para la pestaña "Chats Válidos"
     const wsChatsData = [];
     if(cache.chats.length > 0) wsChatsData.push(cache.chats[0]);
@@ -719,7 +673,6 @@ function exportExcelMultiTabs() {
             wsChatsData.push(row); // Insertar toda la fila original
         }
     });
-
     // 4. Matriz de datos para la pestaña "Llamadas Válidas"
     const wsCallsData = [];
     if(cache.calls.length > 0) wsCallsData.push(cache.calls[0]);
@@ -731,24 +684,21 @@ function exportExcelMultiTabs() {
         if(selectedSupervisor && meta.supervisor.toUpperCase() !== selectedSupervisor.toUpperCase()) return;
         
         const durSecs = durationToSeconds(row[COL.calls.duration]);
-        if(String(row[COL.calls.status]||'').toLowerCase() === 'completed' && durSecs >= 60) { // <--- CORRECCIÓN DE REGLA AQUÍ
+        if(String(row[COL.calls.status]||'').toLowerCase() === 'completed' && durSecs >= 60) {
             const d = parseDateFlexible(row[COL.calls.date]);
             if(from && d < from) return; if(to && d > to) return;
             wsCallsData.push(row); // Insertar toda la fila original
         }
     });
-
     // Crear y configurar el documento Excel
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsLeaderboardData), "Leaderboard");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsTicketsData), "Tickets Válidos");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsChatsData), "Chats Válidos");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsCallsData), "Llamadas Válidas");
-
     // Descargar el archivo
     XLSX.writeFile(wb, `Reporte_Detallado_Valido_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
-
 function exportRawBase(type) {
     const data = cache[type];
     if (!data || data.length === 0) { alert("Base de datos vacía o no sincronizada."); return; }
@@ -759,13 +709,11 @@ function exportRawBase(type) {
     });
     downloadCSV(csv, `Base_Completa_${type.toUpperCase()}_${new Date().toISOString().split('T')[0]}.csv`);
 }
-
 document.getElementById('downloadFilteredBtn').addEventListener('click', exportFilteredTable);
 document.getElementById('downloadExcelTabsBtn').addEventListener('click', exportExcelMultiTabs);
 document.getElementById('downloadRawSelect').addEventListener('change', function() {
     if (this.value) { exportRawBase(this.value); this.value = ""; }
 });
-
 /* ----------------- Motor de Análisis ----------------- */
 function aggregateAndScore(filterFrom, filterTo, selectedGroup, selectedSupervisor){
     const counts={};
@@ -776,13 +724,18 @@ function aggregateAndScore(filterFrom, filterTo, selectedGroup, selectedSupervis
         const meta=metaMap[adv]||{group:'OTROS',supervisor:'OTROS'};
         if(selectedGroup!=='All' && meta.group!==selectedGroup) return;
         if(selectedSupervisor && meta.supervisor.toUpperCase()!==selectedSupervisor.toUpperCase()) return;
-        if(String(row[COL.tickets.status]||'').toUpperCase()==='CANALIZADO'){
+        
+        // ACTUALIZACIÓN LÓGICA DE TICKETS: Comprobamos columna M y columna I
+        const statusI = String(row[COL.tickets.statusI] || '').toUpperCase();
+        const statusM = String(row[COL.tickets.status] || '').toUpperCase();
+        const invalidStatuses = ["OPEN", "PENDING", "POR ASIGNAR CESVE"];
+
+        if(statusM === 'CANALIZADO' && !invalidStatuses.includes(statusI)){
             const d=parseDateFlexible(row[COL.tickets.date]);
             if(filterFrom && d<filterFrom) return; if(filterTo && d>filterTo) return;
             ensure(adv); counts[adv].tickets++;
         }
     });
-
     cache.chats.forEach(row => {
         const adv=mapAdvisorToCanonical(row[COL.chats.advisor]); if(!adv) return;
         const meta=metaMap[adv]||{group:'OTROS',supervisor:'OTROS'};
@@ -794,24 +747,21 @@ function aggregateAndScore(filterFrom, filterTo, selectedGroup, selectedSupervis
             ensure(adv); counts[adv].chats++;
         }
     });
-
     cache.calls.forEach(row => {
         const adv=mapAdvisorToCanonical(row[COL.calls.advisor]); if(!adv) return;
         const meta=metaMap[adv]||{group:'OTROS',supervisor:'OTROS'};
         if(selectedGroup!=='All' && meta.group!==selectedGroup) return;
         if(selectedSupervisor && meta.supervisor.toUpperCase()!==selectedSupervisor.toUpperCase()) return;
-        if(String(row[COL.calls.status]||'').toLowerCase()==='completed' && durationToSeconds(row[COL.calls.duration])>=60){ // <--- CORRECCIÓN DE REGLA AQUÍ
+        if(String(row[COL.calls.status]||'').toLowerCase()==='completed' && durationToSeconds(row[COL.calls.duration])>=60){
             const d=parseDateFlexible(row[COL.calls.date]);
             if(filterFrom && d<filterFrom) return; if(filterTo && d>filterTo) return;
             ensure(adv); counts[adv].calls++;
         }
     });
-
     let maxT=0, maxC=0, maxCh=0;
     Object.values(counts).forEach(c => {
         if(c.tickets>maxT) maxT=c.tickets; if(c.calls>maxC) maxC=c.calls; if(c.chats>maxCh) maxCh=c.chats;
     });
-
     const arr = Object.keys(counts).map(name => {
         const c=counts[name];
         const tPts = maxT ? (c.tickets/maxT)*100 : 0;
@@ -835,14 +785,12 @@ function aggregateAndScore(filterFrom, filterTo, selectedGroup, selectedSupervis
     
     buildLeaderboardRows(arr);
 }
-
 function applyAllFilters() {
     let from = null, to = null;
     if(document.getElementById('dateFrom').value) from = new Date(document.getElementById('dateFrom').value + 'T00:00:00');
     if(document.getElementById('dateTo').value) to = new Date(document.getElementById('dateTo').value + 'T23:59:59');
     aggregateAndScore(from, to, activeGroup, document.getElementById('filterSupervisor').value);
 }
-
 /* ----------------- Flujo de Ejecución e Inicialización ----------------- */
 async function loadAllAndRender() {
     try {
@@ -860,10 +808,8 @@ async function loadAllAndRender() {
         document.getElementById('lastSync').textContent = new Date().toLocaleString('es-MX', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
     } catch(e) { console.error(e); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 }
-
 document.getElementById('applyFilters').addEventListener('click', applyAllFilters);
 document.getElementById('refreshBtn').addEventListener('click', loadAllAndRender);
-
 document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -872,7 +818,6 @@ document.querySelectorAll('.tab').forEach(t => {
         applyAllFilters();
     });
 });
-
 document.getElementById('periodSelector').dispatchEvent(new Event('change'));
 loadAllAndRender();
 setInterval(loadAllAndRender, AUTO_REFRESH_MS);
