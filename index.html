@@ -206,6 +206,7 @@
                     <option value="custom">Personalizado</option>
                     <option value="today">Hoy</option>
                     <option value="thisMonth" selected>Este Mes</option>
+                    <option value="lastMonth">Mes Pasado</option>
                 </select>
             </div>
             <div class="control">
@@ -383,6 +384,12 @@ document.getElementById('periodSelector').addEventListener('change', function() 
         const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         document.getElementById('dateFrom').value = formatDateLocal(firstDay);
         document.getElementById('dateTo').value = formatDateLocal(lastDay);
+    } else if (period === 'lastMonth') {
+        // Se calcula el mes pasado (funciona perfecto incluso en enero, JS ajusta el año automáticamente)
+        const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+        document.getElementById('dateFrom').value = formatDateLocal(firstDay);
+        document.getElementById('dateTo').value = formatDateLocal(lastDay);
     }
 });
 /* ----------------- Días Laborales y Progreso Esperado ----------------- */
@@ -526,7 +533,6 @@ function buildLeaderboardRows(scoresArr, filterFrom, filterTo) {
         const colorT = getBarColor(s.tickets, expT);
         const colorC = getBarColor(s.calls, expC);
         const colorCh = getBarColor(s.chats, expCh);
-
         const tr = document.createElement('tr');
         if(idx === 0) tr.classList.add('top-highlight-1');
         else if(idx === 1) tr.classList.add('top-highlight-2');
